@@ -1,0 +1,11 @@
+package main
+
+import (
+	"Mou1ght-Server/api/router"
+	"Mou1ght-Server/internal/database"
+)
+
+func main() {
+	defer database.Conn.Close()
+	router.RunSever()
+}
