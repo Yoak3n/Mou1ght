@@ -3,14 +3,15 @@ package controller
 import (
 	"Mou1ght-Server/internal/database"
 	"Mou1ght-Server/internal/model"
+	"gorm.io/gorm"
 )
 
-func CheckDuplicateName(user *model.User, name string) bool {
+func CheckExistName(user *model.User, name string) (bool, *gorm.DB) {
 	result := database.DB.Where("name = ?", name).First(&user)
 	if result.RowsAffected == 0 {
-		return false
+		return false, nil
 	}
-	return true
+	return true, result
 }
 
 func RegisterUser(user *model.User) error {

@@ -11,10 +11,12 @@ var R *gin.Engine
 
 func init() {
 	R = gin.Default()
+
 }
 
 func RunSever() {
 	addr := fmt.Sprintf(":%d", config.Conf.SeverPort)
 	handler.RegisterRouterGroup(R)
+
 	_ = R.Run(addr)
 }

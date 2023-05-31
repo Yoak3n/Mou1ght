@@ -7,10 +7,10 @@ import (
 )
 
 type User struct {
-	Name     string `json:"name" gorm:"unique"`
-	NikeName string `json:"nike_name"`
-	Password string `json:"password"`
-	Roles    Roles  `json:"roles" `
+	Name     string ` gorm:"unique"`
+	NickName string
+	Password string
+	Roles    Roles `json:"roles" `
 	gorm.Model
 }
 

@@ -43,7 +43,6 @@ func init() {
 	if Conf.DatabaseOption != SQLITE3 && Conf.DatabaseOption != MYSQL {
 		log.Panic("Please choose one database option :", fmt.Sprintf("[%s,%s]", SQLITE3, MYSQL))
 	}
-	fmt.Println("\n", string(Conf.JwtKey), "\n")
 
 }
 
