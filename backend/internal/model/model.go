@@ -9,15 +9,17 @@ import (
 type User struct {
 	Name     string ` gorm:"unique"`
 	NickName string
+	Email    string
 	Password string
-	Roles    Roles `json:"roles" `
+	Roles    Roles
 	gorm.Model
 }
 
-type Paper struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Author  User   `json:"author" gorm:"foreignkey:Name"`
+type Article struct {
+	Title    string `json:"title" gorm:"unique"`
+	Content  string `json:"content"`
+	Category string `json:"category"`
+	Author   User   `json:"author" gorm:"foreignkey:Name"`
 	gorm.Model
 }
 

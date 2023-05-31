@@ -7,3 +7,13 @@
 
 English - [中文](./README_zh.md)
 
+
+## Process：
+
+- [ ] Backend
+- [ ] Frontend
+- [ ] Client
+
+Is it necessary to use template rendering for SEO ?
+### Dedicated to learning and development !
+

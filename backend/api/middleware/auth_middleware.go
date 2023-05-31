@@ -39,7 +39,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Authorized
 
 		var user model.User
-		database.DB.First(&user, userID)
+		database.GetDB().First(&user, userID)
 		c.Set("User", &user)
 		c.Next()
 	}

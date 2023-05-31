@@ -10,22 +10,29 @@ import (
 	"gorm.io/gorm"
 )
 
-var Conn *sql.DB
-var DB *gorm.DB
+var conn *sql.DB
+var dbc *gorm.DB
 
 func init() {
 	switch config.Conf.DatabaseOption {
 	case "sqlite3":
-		DB = InitSqlite()
+		dbc = initSqlite()
 		log.Println("Already connected Sqlite3")
 	case "mysql":
-		DB = InitMysql()
+		dbc = initMysql()
 		log.Println("Already connected Mysql")
 	}
-	_ = DB.AutoMigrate(&model.User{}, &model.Paper{})
-	Conn, _ = DB.DB()
+	_ = dbc.AutoMigrate(&model.User{}, &model.Article{})
+	conn, _ = dbc.DB()
 
-	Conn.SetMaxOpenConns(100)
-	Conn.SetMaxIdleConns(10)
-	Conn.SetConnMaxLifetime(time.Hour)
+	conn.SetMaxOpenConns(100)
+	conn.SetMaxIdleConns(10)
+	conn.SetConnMaxLifetime(time.Hour)
+}
+
+func GetDB() *gorm.DB {
+	return dbc
+}
+func GetConn() *sql.DB {
+	return conn
 }

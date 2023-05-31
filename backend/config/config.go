@@ -10,6 +10,7 @@ type Configuration struct {
 	SeverPort      int
 	MysqlName      string
 	MysqlPassword  string
+	MysqlAddr      string
 	MysqlPort      int
 	DatabaseName   string
 	DatabaseOption string
@@ -29,6 +30,7 @@ func init() {
 	Conf = new(Configuration)
 	v.SetDefault("SEVER_PORT", 10420)
 	v.SetDefault("MYSQL_NAME", "root")
+	v.SetDefault("MYSQL_ADDR", "127.0.0.1")
 	v.SetDefault("MYSQL_PORT", 3306)
 	v.SetDefault("DB_NAME", "mou1ght")
 	v.SetDefault("DB_OPTION", SQLITE3)
@@ -77,6 +79,7 @@ func loadConfig(v *viper.Viper) {
 	Conf.SeverPort = v.GetInt("SEVER_PORT")
 	Conf.MysqlName = v.GetString("MYSQL_NAME")
 	Conf.MysqlPassword = v.GetString("MYSQL_PASSWORD")
+	Conf.MysqlAddr = v.GetString("MYSQL_ADDR")
 	Conf.MysqlPort = v.GetInt("MYSQL_PORT")
 	Conf.DatabaseName = v.GetString("DB_NAME")
 	Conf.DatabaseOption = v.GetString("DB_OPTION")

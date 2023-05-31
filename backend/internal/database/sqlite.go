@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func InitSqlite() *gorm.DB {
+func initSqlite() *gorm.DB {
 	dsn := fmt.Sprintf("./%s.db", config.Conf.DatabaseName)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {

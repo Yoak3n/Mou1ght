@@ -11,7 +11,7 @@ import (
 // Created at 2023/4/10 14:56
 // Created by Yoake
 
-func InitMysql() *gorm.DB {
+func initMysql() *gorm.DB {
 	conf := config.Conf
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.MysqlName, conf.MysqlPassword, conf.MysqlPort, conf.DatabaseName)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
