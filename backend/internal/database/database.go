@@ -11,19 +11,19 @@ import (
 )
 
 var conn *sql.DB
-var dbc *gorm.DB
+var mdb *gorm.DB
 
 func init() {
 	switch config.Conf.DatabaseOption {
 	case "sqlite3":
-		dbc = initSqlite()
-		logger.LogOut("Already connected Sqlite3")
+		mdb = initSqlite()
+		logger.LogOut("Already connected to Sqlite3")
 	case "mysql":
-		dbc = initMysql()
-		logger.LogOut("Already connected Mysql")
+		mdb = initMysql()
+		logger.LogOut("Already connected to Mysql")
 	}
-	_ = dbc.AutoMigrate(&model.User{}, &model.Article{})
-	conn, _ = dbc.DB()
+	_ = mdb.AutoMigrate(&model.User{}, &model.Article{})
+	conn, _ = mdb.DB()
 
 	conn.SetMaxOpenConns(100)
 	conn.SetMaxIdleConns(10)
@@ -31,7 +31,7 @@ func init() {
 }
 
 func GetDB() *gorm.DB {
-	return dbc
+	return mdb
 }
 func GetConn() *sql.DB {
 	return conn

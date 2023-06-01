@@ -3,7 +3,6 @@ import {ref } from 'vue';
 import { NConfigProvider, } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
 
-import NaiveProvider from './components/common/NaiveProvider/index.vue'
 
 let theme = ref(<GlobalTheme | null>null)
 </script>
