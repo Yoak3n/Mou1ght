@@ -1,5 +1,5 @@
 <template>
-    <svg style="{width,height}">
+    <svg style="{width: , height}">
         <use :xlink:href="prefix+name" :fill="color"></use>
     </svg>
 

@@ -1,9 +1,9 @@
 // 对外暴露全局组件插件
 import SvgIcon from './common/SvgIcon/index.vue';
-import NaiveProvider from './common/NaiveProvider/index.vue'
 
 
-const allGlobalComponent:any ={SvgIcon,NaiveProvider} 
+
+const allGlobalComponent:any ={SvgIcon}
 export default {
     // app.use自动执行install方法
     install(app:any){

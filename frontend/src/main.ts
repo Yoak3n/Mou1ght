@@ -14,5 +14,8 @@ import 'virtual:svg-icons-register'
 import pinia from './store/index'
 app.use(pinia)
 
+import GlobalComponent from '@/components/index'
+app.use(GlobalComponent)
+
 app.mount('#app')
 
