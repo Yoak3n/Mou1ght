@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	defer database.Conn.Close()
+	defer database.GetConn().Close()
 	router.RunSever()
 }

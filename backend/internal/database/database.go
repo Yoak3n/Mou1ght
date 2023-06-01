@@ -3,7 +3,7 @@ package database
 import (
 	"Mou1ght-Server/config"
 	"Mou1ght-Server/internal/model"
-	"log"
+	"Mou1ght-Server/package/logger"
 	"time"
 
 	"database/sql"
@@ -17,10 +17,10 @@ func init() {
 	switch config.Conf.DatabaseOption {
 	case "sqlite3":
 		dbc = initSqlite()
-		log.Println("Already connected Sqlite3")
+		logger.LogOut("Already connected Sqlite3")
 	case "mysql":
 		dbc = initMysql()
-		log.Println("Already connected Mysql")
+		logger.LogOut("Already connected Mysql")
 	}
 	_ = dbc.AutoMigrate(&model.User{}, &model.Article{})
 	conn, _ = dbc.DB()
