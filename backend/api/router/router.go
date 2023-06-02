@@ -18,7 +18,7 @@ func init() {
 
 func RunSever() {
 	addr := fmt.Sprintf(":%d", config.Conf.SeverPort)
-	router.RegisterRouterGroup(R)
 	R.Use(middleware.CORSMiddleware())
+	router.RegisterRouterGroup(R)
 	_ = R.Run(addr)
 }

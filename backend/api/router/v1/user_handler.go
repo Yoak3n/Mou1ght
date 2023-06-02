@@ -32,11 +32,12 @@ func registerUserRouter(g *gin.RouterGroup) {
 func loginHandler(c *gin.Context) {
 	username := c.Param("name")
 	password := c.Param("password")
+	logger.LogOut(username)
 	var user model.User
 	// check user exists or not
 	db.Where("name = ?", username).First(&user)
 	if user.ID == 0 {
-		response.Response(c, http.StatusNotAcceptable, 404, nil, "User doesn't exist")
+		response.Response(c, http.StatusUnauthorized, 403, nil, "User doesn't exist")
 		return
 	}
 	if len(password) < 6 {
@@ -46,7 +47,7 @@ func loginHandler(c *gin.Context) {
 	// Judge password
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		response.Fail(c, "Incorrect password", nil)
+		response.Response(c, http.StatusUnauthorized, 403, nil, "Incorrect password")
 		return
 	}
 	token, err := util.ReleaseToken(&user)

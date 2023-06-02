@@ -4,7 +4,7 @@ import {SET_TOKEN,GET_TOKEN} from "@/utils/storage";
 import type {loginForm} from "@/api/user/type";
 import {reqLogin} from "@/api/user";
 
-export const useUserStore = defineStore('user-store',{
+let useUserStore = defineStore('userStore',{
     state:():UserState=>{
         return {
             token:GET_TOKEN(),
@@ -30,3 +30,6 @@ export const useUserStore = defineStore('user-store',{
         }
     }
 })
+
+
+export default useUserStore

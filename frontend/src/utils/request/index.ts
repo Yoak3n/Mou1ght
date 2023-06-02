@@ -6,15 +6,14 @@ let request = axios.create({
     timeout:5000,
 });
 
-import {useUserStore} from "@/store/modules/user";
 
-let userStore = useUserStore()
+import useUserStore from "@/store/modules/user";
 
 
 // 第二步：为axios实例添加请求与响应拦截器
 request.interceptors.request.use((config)=>{
     // config配置对象，headers属性请求头，经常给服务器携带公共参数
-
+    const userStore = useUserStore()
     // 添加token认证请求头
     config.headers.set("Authorization","Bearer "+userStore.token)
     return config
@@ -26,7 +25,7 @@ request.interceptors.response.use((response)=>{
 },(error)=>{
     // 失败的回调，处理http网络错误
     let message = ''
-    let statusCode = error.response.status;
+    let statusCode = error.response.data.code;
     switch(statusCode){
         case 401:
             message = "TOKEN过期"
@@ -44,9 +43,8 @@ request.interceptors.response.use((response)=>{
             message = "网络出现问题"
             break;
     }
-    window.$message.error(message)
-
-    return Promise.reject(error)
+    // window.$message.error(message,{ duration: 2500 })
+    return Promise.reject(message)
 })
 
 export default request;

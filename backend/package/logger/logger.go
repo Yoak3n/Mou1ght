@@ -19,10 +19,10 @@ func init() {
 	if err != nil {
 		log.Fatalln("Can't open file error.log:", err)
 	}
-	Trace = log.New(io.Discard, "[TRACE] ", log.LstdFlags|log.Lmsgprefix)
-	Info = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lmsgprefix)
-	Warning = log.New(os.Stdout, "[WARNING] ", log.LstdFlags|log.Lmsgprefix)
-	Error = log.New(io.MultiWriter(file, os.Stderr), "[ERROR] ", log.LstdFlags|log.Lmsgprefix)
+	Trace = log.New(io.Discard, "[TRACE] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
+	Info = log.New(os.Stdout, "[INFO] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
+	Warning = log.New(os.Stdout, "[WARNING] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
+	Error = log.New(io.MultiWriter(file, os.Stderr), "[ERROR] ", log.LstdFlags|log.Lmsgprefix|log.Lshortfile)
 }
 
 func LogOut(msg string, flag ...int) {

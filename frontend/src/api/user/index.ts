@@ -7,16 +7,6 @@ enum API{
 }
 // 暴露请求函数
 // 登录接口方法
-export const reqLogin = (data:loginForm)=>request.post<any,loginResponseData>(API.LOGIN_URL,{
-    params:{
-        username :data.username,
-        password: data.password,
-    }
-});
-export const reqRegister = (data:loginForm)=>request.post<any,loginResponseData>(API.REGISTER_URL,{
-    params:{
-        username :data.username,
-        password: data.password,
-    }
-})
+export const reqLogin = (data:loginForm)=>request.post<any,loginResponseData>(API.LOGIN_URL+`/${data.username}/${data.password}`);
+export const reqRegister = (data:loginForm)=>request.post<any,loginResponseData>(API.REGISTER_URL+`/${data.username}/${data.password}`,)
 export const reqUserInfo = ()=>request.get<userResponseData>(API.USERINFO_URL)
