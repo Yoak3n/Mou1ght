@@ -40,10 +40,10 @@ func init() {
 		loadFromEnv(v)
 		logger.LogOut("Load configuration from environment")
 	}
-	logger.LogOut("Load configuration from file")
+	logger.INFO("Load configuration from file")
 	// check database option
 	if Conf.DatabaseOption != SQLITE3 && Conf.DatabaseOption != MYSQL {
-		logger.LogOut(fmt.Sprintf("Please choose one database option :[%s,%s]", SQLITE3, MYSQL), 0)
+		logger.ERROR(fmt.Sprintf("Please choose one database option :[%s,%s]", SQLITE3, MYSQL))
 	}
 
 }
@@ -51,7 +51,7 @@ func init() {
 func loadFromEnv(v *viper.Viper) {
 	err := v.BindEnv("SEVER_PORT", "MYSQL_NAME", "MYSQL_PASSWORD", "MYSQL_PORT", "DB_NAME", "JWT_KEY")
 	if err != nil {
-		logger.LogOut("GET ENVIRONMENT VARIABLE FAILED")
+		logger.INFO("GET ENVIRONMENT VARIABLE FAILED")
 	}
 	v.AutomaticEnv()
 	v.AllowEmptyEnv(true)
@@ -65,9 +65,9 @@ func loadFromFile(v *viper.Viper) (readed bool) {
 	err := v.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			logger.LogOut("Config file not exists")
+			logger.WARNING("Config file not exists")
 		} else {
-			logger.LogOut("Read config file error", 0)
+			logger.ERROR("Read config file error")
 		}
 		return false
 	}

@@ -32,7 +32,7 @@ func registerUserRouter(g *gin.RouterGroup) {
 func loginHandler(c *gin.Context) {
 	username := c.Param("name")
 	password := c.Param("password")
-	logger.LogOut(username)
+	logger.INFO(username)
 	var user model.User
 	// check user exists or not
 	db.Where("name = ?", username).First(&user)
@@ -91,7 +91,7 @@ func registerHandler(c *gin.Context) {
 		token, err := util.ReleaseToken(&user)
 		if err != nil {
 			response.Response(c, http.StatusInternalServerError, 500, nil, "System error")
-			logger.LogOut(fmt.Sprintf("token generate error:%v", err), 0)
+			logger.ERROR(fmt.Sprintf("token generate error:%v", err))
 			return
 		}
 

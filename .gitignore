@@ -5,4 +5,5 @@ backend/config.yml
 tmp/
 *.db
 data/
+logs/
 Mou1ght-Server.exe

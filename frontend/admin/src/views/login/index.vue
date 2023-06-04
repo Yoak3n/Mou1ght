@@ -1,37 +1,56 @@
 <script setup lang="ts">
 import useUserStore from '@/store/modules/user';
-import { NForm, NInput, NFormItem, NButton, FormInst, NGrid, NGi,NCheckbox } from 'naive-ui'
-import { ref } from 'vue';
-import type { loginForm } from "@/api/user/type";
+import { NForm, NInput, NFormItem, NButton, FormInst, NGrid, NGi,NCheckbox,FormItemRule,FormRules } from 'naive-ui'
+import { computed, ref } from 'vue';
+
 
 
 import { getTimeDutation } from '@/utils/time';
 import { useRouter } from 'vue-router';
-
-const model = ref<loginForm>({ username: '', password: '' })
-let check = ref(false)
+const model = ref({ username: '', password: '',check:false })
 let isLoading=  ref(false)
 
 const $router = useRouter()
-const formRef = ref<FormInst | null>(null)
-
+let formRef = ref<FormInst | null>(null)
 
 const userStore = useUserStore()
-const rules=  {
-      model: {
+// 自定义表单验证 
+let rules:FormRules=  {
+      
         username: {
           required: true,
           message: '请输入用户名',
-          trigger: 'blur'
+          trigger: [ 'input'],
         },
         password: {
           required: true,
-          message: '请输入正确的密码',
-          trigger: ['input', 'blur']
+          validator(_:FormItemRule,value:string){
+            if(!value){
+              return new Error("请输入密码")
+            }else if(value.length<6){
+              return new Error("请输入至少6位密码")
+            }else{
+              return true
+            }
+          },
+          trigger: ['input', 'blur'],
         }
-      }
     }
-
+// let vaild = ref(false)
+// watch(
+//   ()=>formRef.value?.validate,
+//   (currentValue,preValue)=>{
+//     if (currentValue != preValue){
+//       if (!currentValue){
+//         window.$message.success('Vaild')
+//         return vaild.value = true
+//       }else{
+//         window.$message.error('Invalid')
+//         return vaild.value = false
+//       }
+//     }
+//   }
+// )
 
 
 const showAgreement = ()=>{
@@ -42,9 +61,38 @@ const showAgreement = ()=>{
         })
 }
 
+const createStatus =(value:boolean)=>{
+  if (!value){
+    return "error"
+  }else{
+    return undefined
+  }
+}
+
+const showAgreementFeedback = computed(()=>{
+  return createFeedback(model.value.check)
+})
+
+const createFeedback = (value :boolean):string=>{
+  if (!value){
+    return "请阅读并勾选用户协议"
+  }else{
+    return ""
+  }
+}
+
+const checkAgreementStatus = computed(()=>{
+  return createStatus(model.value.check)
+})
+
+
+let showFeedback = ref(false)
 const loginHandle =  async()=>{
+  showFeedback.value = true
   isLoading.value = true
-  isLoading.value = true
+  if (createStatus(model.value.check) != "error"){
+    console.log("发送请求");
+    
     try{
         await userStore.userLogin(model.value)
         $router.push('/')
@@ -68,6 +116,12 @@ const loginHandle =  async()=>{
         model.value.password = ''
         isLoading.value = false
     }
+  }else{
+    console.log("不发送请求");
+    isLoading.value = false
+    return
+  }
+    
   
 }
 
@@ -82,17 +136,18 @@ const loginHandle =  async()=>{
         <div class="login-card">
           <h1>Hello!</h1>
           <h2>欢迎登录~</h2>
-          <n-form ref="formRef" :model="model" :rules="rules">
-            <n-form-item label="用户名" > 
+          <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
+            <n-form-item label="用户名" path="username" > 
               <n-input v-model:value="model.username"  placeholder="请输入您的用户名" />
             </n-form-item>
-            <n-form-item label="密码">
-              <n-input v-model:value="model.password" type="password" placeholder="请输入您的密码" @input=""
+            <n-form-item label="密码" path="password">
+              <n-input v-model:value="model.password" type="password" placeholder="请输入您的密码" 
                 @keydown.enter="loginHandle" />
-            </n-form-item>
-              <n-checkbox v-model:checked="check" size="large" style="margin: 10px 0;"><n-button text @click="showAgreement">请阅读用户协议并勾选 </n-button></n-checkbox>
+            </n-form-item >
+            <n-form-item size="small" inline :show-label="false" :feedback="showAgreementFeedback" :show-feedback="showFeedback" :validation-status="checkAgreementStatus">
+              <n-checkbox v-model:checked="model.check" size="large" style="margin: 10px 0;" path="check"><n-button text @click="showAgreement">请阅读并勾选用户协议 </n-button></n-checkbox>
+            </n-form-item >
               <!-- 添加窗口 -->
-   
             <div style="display: flex; justify-content: flex-end">
                 <n-button 
                   class="login-button" 
@@ -139,7 +194,6 @@ const loginHandle =  async()=>{
     }
 
     .login-button {
-      
       width: 100%;
     }
   }

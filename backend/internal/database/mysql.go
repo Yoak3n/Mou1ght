@@ -2,10 +2,10 @@ package database
 
 import (
 	"Mou1ght-Server/config"
+	"Mou1ght-Server/package/logger"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 // Created at 2023/4/10 14:56
@@ -16,10 +16,10 @@ func initMysql() *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.MysqlName, conf.MysqlPassword, conf.MysqlPort, conf.DatabaseName)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Panic("database connected err:", err)
+		logger.ERROR(fmt.Sprintf("database connected err:%v", err))
 	}
 	if err != nil {
-		log.Panic("Create table failed:", err)
+		logger.ERROR(fmt.Sprintf("database connected err:%v", err))
 	}
 	return db
 }

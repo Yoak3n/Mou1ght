@@ -14,7 +14,8 @@ var (
 )
 
 func init() {
-	file, err := os.OpenFile("data/errors.log",
+	initDirectory()
+	file, err := os.OpenFile("logs/errors.log",
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Can't open file error.log:", err)
@@ -42,4 +43,39 @@ func LogOut(msg string, flag ...int) {
 		Trace.Println(msg)
 	}
 
+}
+
+func INFO(msg ...string) {
+	Info.Println(msg)
+}
+func WARNING(msg ...string) {
+	Warning.Println(msg)
+}
+func ERROR(msg ...string) {
+	Error.Println(msg)
+}
+func TRACE(msg ...string) {
+	Trace.Println(msg)
+}
+
+// because can't init in main.go before in logger.go ,so the function moves here
+func initDirectory() {
+	_, err := os.Stat("data")
+	if err != nil {
+		log.Println("data directory didn't exist")
+		err = os.Mkdir("data", os.ModePerm)
+		if err != nil {
+			panic("Can't create directory 'data'")
+		}
+	}
+	_, err = os.Stat("logs")
+	if err != nil {
+		if err != nil {
+			log.Println("logs directory didn't exist")
+			err = os.Mkdir("logs", os.ModePerm)
+			if err != nil {
+				panic("Can't create directory 'logs")
+			}
+		}
+	}
 }

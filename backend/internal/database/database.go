@@ -17,10 +17,10 @@ func init() {
 	switch config.Conf.DatabaseOption {
 	case "sqlite3":
 		mdb = initSqlite()
-		logger.LogOut("Already connected to Sqlite3")
+		logger.INFO("Already connected to Sqlite3")
 	case "mysql":
 		mdb = initMysql()
-		logger.LogOut("Already connected to Mysql")
+		logger.INFO("Already connected to Mysql")
 	}
 	_ = mdb.AutoMigrate(&model.User{}, &model.Article{})
 	conn, _ = mdb.DB()
