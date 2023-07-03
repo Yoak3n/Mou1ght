@@ -91,8 +91,8 @@ const loginHandle =  async()=>{
   showFeedback.value = true
   isLoading.value = true
   if (createStatus(model.value.check) != "error"){
-    console.log("发送请求");
-    
+    // 屎代码，之后去看看别人的方案
+    // 或者放弃用表单验证是否勾选，直接弹出消息
     try{
         await userStore.userLogin(model.value)
         $router.push('/')
@@ -117,7 +117,6 @@ const loginHandle =  async()=>{
         isLoading.value = false
     }
   }else{
-    console.log("不发送请求");
     isLoading.value = false
     return
   }
@@ -155,7 +154,6 @@ const loginHandle =  async()=>{
                   type="primary" @click="loginHandle"
                   :loading="isLoading"
                   >
-                  
                   登录
                 </n-button>
               </div>
@@ -172,6 +170,9 @@ const loginHandle =  async()=>{
 
 <style scoped lang="scss">
 .login-wrapper {
+  background: url('@/assets/images/login_background.png')no-repeat;
+  background-size: cover;
+  height: 100vh;
   .login-card {
     font-size: large;
     color: #fff;

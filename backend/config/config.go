@@ -7,14 +7,14 @@ import (
 )
 
 type Configuration struct {
-	SeverPort      int
-	MysqlName      string
-	MysqlPassword  string
-	MysqlAddr      string
-	MysqlPort      int
-	DatabaseName   string
-	DatabaseOption string
-	JwtKey         []byte
+	SeverPort      int    `yaml:"sever_port"`
+	MysqlName      string `yaml:"mysql_name"`
+	MysqlPassword  string `yaml:"mysql_password"`
+	MysqlAddr      string `yaml:"mysql_addr"`
+	MysqlPort      int    `yaml:"mysql_port"`
+	DatabaseName   string `yaml:"database_name"`
+	DatabaseOption string `yaml:"database_option"`
+	JwtKey         []byte `yaml:"jwt_key"`
 }
 
 var Conf *Configuration
@@ -38,7 +38,7 @@ func init() {
 	ok := loadFromFile(v)
 	if !ok {
 		loadFromEnv(v)
-		logger.LogOut("Load configuration from environment")
+		logger.TRACE("Load configuration from environment")
 	}
 	logger.INFO("Load configuration from file")
 	// check database option
