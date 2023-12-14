@@ -1,4 +1,4 @@
-import {createRouter,createWebHistory} from 'vue-router'
+import {createRouter,createWebHashHistory} from 'vue-router'
 
 
 import routes from './routes'
@@ -6,5 +6,5 @@ import routes from './routes'
 
 export default createRouter({
     routes,
-    history:createWebHistory(),
+    history:createWebHashHistory(),
 })
