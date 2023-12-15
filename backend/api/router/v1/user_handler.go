@@ -51,7 +51,7 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 	token, err := util.ReleaseToken(&user)
-	response.Success(c, gin.H{"token": token}, "Login in successfully")
+	response.Success(c, gin.H{"token": token}, "Login successfully")
 }
 func userInfoHandler(c *gin.Context) {
 	user, ok := c.Get("User")
@@ -99,4 +99,8 @@ func registerHandler(c *gin.Context) {
 		response.Success(c, gin.H{"token": token}, "Register successfully")
 		return
 	}
+}
+
+func logoutHandler(c *gin.Context) {
+
 }

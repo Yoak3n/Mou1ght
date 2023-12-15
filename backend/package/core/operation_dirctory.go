@@ -9,6 +9,7 @@ func MkDir() {
 		}
 	}()
 	err := makeDirNotExists("data/")
+	err = makeDirNotExists("data/db/")
 	err = makeDirNotExists("data/logs/")
 	if err != nil {
 		return

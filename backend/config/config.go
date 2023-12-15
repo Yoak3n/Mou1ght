@@ -38,12 +38,11 @@ func init() {
 	ok := loadFromFile(v)
 	if !ok {
 		loadFromEnv(v)
-		logger.TRACE("Load configuration from environment")
+		logger.Trace.Println("Load configuration from environment")
 	}
-	logger.INFO("Load configuration from file")
 	// check database option
 	if Conf.DatabaseOption != SQLITE3 && Conf.DatabaseOption != MYSQL {
-		logger.ERROR(fmt.Sprintf("Please choose one database option :[%s,%s]", SQLITE3, MYSQL))
+		logger.Error.Println(fmt.Sprintf("Please choose one database option :[%s,%s]", SQLITE3, MYSQL))
 	}
 
 }
@@ -65,13 +64,14 @@ func loadFromFile(v *viper.Viper) (readed bool) {
 	err := v.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			logger.WARNING("Config file not exists")
+			logger.Warning.Println("Config file not exists")
 		} else {
-			logger.ERROR("Read config file error")
+			logger.Error.Println("Read config file error")
 		}
 		return false
 	}
 	loadConfig(v)
+	logger.Info.Println("Load configuration from file")
 	return true
 }
 

@@ -17,17 +17,24 @@ func init() {
 	switch config.Conf.DatabaseOption {
 	case "sqlite3":
 		mdb = initSqlite()
-		logger.INFO("Already connected to Sqlite3")
+		logger.Info.Println("Already connected to Sqlite3")
 	case "mysql":
 		mdb = initMysql()
-		logger.INFO("Already connected to Mysql")
+		logger.Info.Println("Already connected to Mysql")
 	}
-	_ = mdb.AutoMigrate(&model.User{}, &model.Article{})
+	migrateTables(&model.User{}, &model.Article{})
 	conn, _ = mdb.DB()
 
 	conn.SetMaxOpenConns(100)
 	conn.SetMaxIdleConns(10)
 	conn.SetConnMaxLifetime(time.Hour)
+}
+
+func migrateTables(tables ...interface{}) {
+	err := mdb.AutoMigrate(tables...)
+	if err != nil {
+		logger.Error.Panic("migrate tables failed")
+	}
 }
 
 func GetDB() *gorm.DB {
