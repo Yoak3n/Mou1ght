@@ -12,7 +12,7 @@ import (
 var R *gin.Engine
 
 func init() {
-	gin.SetMode(gin.ReleaseMode)
+	// gin.SetMode(gin.ReleaseMode)
 	R = gin.Default()
 	R.SetTrustedProxies([]string{"http://127.0.0.1:7890"})
 }

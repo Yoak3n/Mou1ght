@@ -9,7 +9,6 @@ import (
 	"Mou1ght-Server/internal/model"
 	"Mou1ght-Server/package/logger"
 	"Mou1ght-Server/package/util"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -27,6 +26,7 @@ func registerUserRouter(g *gin.RouterGroup) {
 	u.POST("/login/:name/:password", loginHandler)
 	u.POST("/register/:name/:password", registerHandler)
 	u.GET("/info", middleware.AuthMiddleware(), userInfoHandler)
+	u.POST("/logout", middleware.AuthMiddleware(), logoutHandler)
 }
 
 func loginHandler(c *gin.Context) {
@@ -51,6 +51,9 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 	token, err := util.ReleaseToken(&user)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+	}
 	response.Success(c, gin.H{"token": token}, "Login successfully")
 }
 func userInfoHandler(c *gin.Context) {
@@ -91,7 +94,7 @@ func registerHandler(c *gin.Context) {
 		token, err := util.ReleaseToken(&user)
 		if err != nil {
 			response.Response(c, http.StatusInternalServerError, 500, nil, "System error")
-			logger.ERROR(fmt.Sprintf("token generate error:%v", err))
+			logger.Error.Printf("token generate error:%v\n", err)
 			return
 		}
 

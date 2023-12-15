@@ -42,3 +42,12 @@ func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 	})
 	return token, claims, err
 }
+
+func ClearToken(tokenString string) error {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
+		return sampleJwtKey, err
+	})
+	token.Valid = false
+	return err
+}

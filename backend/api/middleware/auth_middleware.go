@@ -25,7 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		token, claims, err := util.ParseToken(tokenString)
 		if err != nil || !token.Valid {
 			response.Response(c, http.StatusUnauthorized, 401, nil, "Unauthorized")
-			logger.INFO("Token is invalid")
+			logger.Info.Println("Token is invalid")
 			c.Abort()
 			return
 		}
