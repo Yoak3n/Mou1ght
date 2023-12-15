@@ -58,7 +58,7 @@ let menuOptions:MenuOption[] = [
         icon: renderIcon(PersonIcon),
     }, {
         label: '权限管理',
-        key: 'a-wild-sheep-chase',
+        key: 'auth-admin',
         icon: renderIcon(WineIcon),
     },
 ]
