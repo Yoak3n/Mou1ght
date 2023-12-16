@@ -43,22 +43,26 @@ let rules: FormRules = {
   }
 }
 
-const registerHandle = async()=>{
+
+const registerHandle = async () => {
   isLoading.value = true
-  try {
-    await userStore.userRegister(model.value)
-  }catch(error){
+  if (model.value.password === model.value.repeat_password) {
+    try {
+      await userStore.userRegister(model.value)
+    } catch (error) {
       window.$notification.error({
-            content: 'Error',
-            meta:error,
-            duration:2500,
-            closable: false,
-        })
-    }finally{
-        model.value.username=''
-        model.value.password = ''
-        isLoading.value = false
+        content: 'Error',
+        meta: error,
+        duration: 2500,
+        closable: false,
+      })
+    } finally {
+      model.value.username = ''
+      model.value.password = ''
+      isLoading.value = false
     }
+  }
+
 }
 
 </script>
@@ -89,7 +93,8 @@ const registerHandle = async()=>{
             </n-form-item> -->
             <!-- 添加窗口 -->
             <div style="display: flex; justify-content: flex-end">
-              <n-button class="register-button" createLocalStorage type="primary" :loading="isLoading" @click="registerHandle">
+              <n-button class="register-button" createLocalStorage type="primary" :loading="isLoading"
+                @click="registerHandle">
                 注册
               </n-button>
             </div>
