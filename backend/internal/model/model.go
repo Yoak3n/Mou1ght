@@ -7,12 +7,21 @@ import (
 )
 
 type User struct {
-	Name     string ` gorm:"unique"`
-	NickName string
-	Email    string
-	Password string
-	Roles    Roles
+	Name     string `json:"name" gorm:"unique"`
+	NickName string `json:"nick_name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Roles    Roles  `json:"roles"`
 	gorm.Model
+}
+
+func (u *User) Scan(value interface{}) error {
+	bytesValue, _ := value.([]byte)
+	return json.Unmarshal(bytesValue, u)
+}
+
+func (u *User) Value() (driver.Value, error) {
+	return json.Marshal(u)
 }
 
 type Roles []string
