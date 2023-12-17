@@ -15,14 +15,6 @@ type User struct {
 	gorm.Model
 }
 
-type Article struct {
-	Title    string `json:"title" gorm:"unique"`
-	Content  string `json:"content"`
-	Category string `json:"category"`
-	Author   User   `json:"author" gorm:"foreignkey:Name"`
-	gorm.Model
-}
-
 type Roles []string
 
 func (r *Roles) Scan(value interface{}) error {

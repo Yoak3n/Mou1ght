@@ -32,7 +32,7 @@ func registerUserRouter(g *gin.RouterGroup) {
 func loginHandler(c *gin.Context) {
 	username := c.Param("name")
 	password := c.Param("password")
-	logger.INFO(username)
+	logger.Info.Println(username)
 	var user model.User
 	// check user exists or not
 	db.Where("name = ?", username).First(&user)

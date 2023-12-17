@@ -61,6 +61,8 @@ const registerHandle = async () => {
       model.value.password = ''
       isLoading.value = false
     }
+  }else{
+    isLoading.value = false
   }
 
 }

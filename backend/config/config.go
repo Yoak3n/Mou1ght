@@ -50,7 +50,7 @@ func init() {
 func loadFromEnv(v *viper.Viper) {
 	err := v.BindEnv("SEVER_PORT", "MYSQL_NAME", "MYSQL_PASSWORD", "MYSQL_PORT", "DB_NAME", "JWT_KEY")
 	if err != nil {
-		logger.INFO("GET ENVIRONMENT VARIABLE FAILED")
+		logger.Info.Println("GET ENVIRONMENT VARIABLE FAILED")
 	}
 	v.AutomaticEnv()
 	v.AllowEmptyEnv(true)

@@ -17,7 +17,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := c.GetHeader("Authorization")
 		fmt.Println(tokenString)
 		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
-			logger.INFO("Format of token is incorrect")
+			logger.Info.Println("Format of token is incorrect")
 			c.Abort()
 		}
 		tokenString = tokenString[7:]

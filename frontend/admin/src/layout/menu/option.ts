@@ -31,19 +31,19 @@ let  menuOptions: MenuOption[] = [
             },
         ]
     },{
-        label: '商品管理',
-        key: 'product',
-        path:'/product',
+        label: '文章管理',
+        key: 'article',
+        path:'/article',
         icon: renderIcon(icon.CarOutline),
         children:[
             {
-                label:'品牌管理',key:'product/trademark',path:'/product/trademark'
+                label:'文章列表',key:'article/list',path:'/article/list'
             },{
-                label:'SPU管理',key:'product/spu',path:'/product/spu'
+                label:'SPU管理',key:'article/spu',path:'/article/spu'
             },{
-                label:'SKU管理',key:'product/sku',path:'/product/sku'
+                label:'SKU管理',key:'article/sku',path:'/article/sku'
             },{
-                label:'属性管理',key:'product/attr',path:'/product/attr'
+                label:'属性管理',key:'article/attr',path:'/article/attr'
             }
         ]
     }

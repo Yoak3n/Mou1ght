@@ -16,10 +16,10 @@ func initMysql() *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.MysqlName, conf.MysqlPassword, conf.MysqlPort, conf.DatabaseName)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.ERROR(fmt.Sprintf("database connected err:%v", err))
+		logger.Error.Println(fmt.Sprintf("database connected err:%v", err))
 	}
 	if err != nil {
-		logger.ERROR(fmt.Sprintf("database connected err:%v", err))
+		logger.Error.Println(fmt.Sprintf("database connected err:%v", err))
 	}
 	return db
 }
