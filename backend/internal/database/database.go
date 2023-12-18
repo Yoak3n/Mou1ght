@@ -22,7 +22,7 @@ func init() {
 		mdb = initMysql()
 		logger.Info.Println("Already connected to Mysql")
 	}
-	migrateTables(&model.User{}, &model.Article{})
+	migrateTables(&model.Article{}, &model.User{})
 	conn, _ = mdb.DB()
 
 	conn.SetMaxOpenConns(100)
@@ -33,6 +33,7 @@ func init() {
 func migrateTables(tables ...interface{}) {
 	err := mdb.AutoMigrate(tables...)
 	if err != nil {
+		logger.Error.Println(err)
 		logger.Error.Panic("migrate tables failed")
 	}
 }

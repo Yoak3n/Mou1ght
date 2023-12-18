@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 )
 
 var db *gorm.DB
@@ -66,9 +67,14 @@ func userInfoHandler(c *gin.Context) {
 func registerHandler(c *gin.Context) {
 	username := c.Param("name")
 	nickname := username
+	atoi, err := strconv.Atoi(username)
+	if err != nil {
+		response.Response(c, http.StatusUnprocessableEntity, 422, nil, "Your name is not a number")
+	}
 	password := c.Param("password")
+
 	user := model.User{
-		Name:     username,
+		Name:     uint(atoi),
 		NickName: nickname,
 	}
 	if len(password) < 6 {
@@ -86,6 +92,7 @@ func registerHandler(c *gin.Context) {
 			return
 		}
 		user.Password = string(hashedPassword)
+
 		err = controller.RegisterUser(&user)
 		if err != nil {
 			response.Response(c, http.StatusInternalServerError, 500, nil, "User register failed with database error")

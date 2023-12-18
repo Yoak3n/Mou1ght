@@ -6,10 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-<<<<<<< HEAD
-func CheckExistName(user *model.User, name string) (*gorm.DB, bool) {
-=======
-func GetUserById(id uint) (user *model.User) {
+func GetUserByID(id uint) (user *model.User) {
 	result := db.First(&user, id)
 	if result.RowsAffected == 0 {
 		return nil
@@ -17,8 +14,7 @@ func GetUserById(id uint) (user *model.User) {
 	return
 }
 
-func CheckExistName(user *model.User, name string) (bool, *gorm.DB) {
->>>>>>> 1a3c95d3e7e68069a3ee2e7e2b40101c4c1dc8f0
+func CheckExistName(user *model.User, name string) (*gorm.DB, bool) {
 	result := db.Where("name = ?", name).First(&user)
 	if result.RowsAffected == 0 {
 		return nil, false

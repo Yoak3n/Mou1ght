@@ -5,7 +5,6 @@ import (
 	"Mou1ght-Server/internal/controller"
 	"Mou1ght-Server/internal/dto"
 	"Mou1ght-Server/internal/model"
-	"Mou1ght-Server/package/logger"
 	"net/http"
 	"strconv"
 
@@ -21,9 +20,8 @@ func registerArticleRouter(g *gin.RouterGroup) {
 }
 
 func articleAdd(c *gin.Context) {
-	article := new(dto.ArticleDTO)
+	article := new(dto.ArticlePostDTO)
 	err := c.BindJSON(&article)
-	logger.Info.Println(article)
 	if err != nil {
 		response.Fail(c, "Invalid article data", nil)
 	}

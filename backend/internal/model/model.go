@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	Name     string `json:"name" gorm:"unique"`
+	Name     uint   `json:"name" gorm:"unique"`
 	NickName string `json:"nick_name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
