@@ -73,7 +73,7 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 
-	if duplicate, _ := controller.CheckExistName(&user, username); duplicate {
+	if _, duplicate := controller.CheckExistName(&user, username); duplicate {
 		response.Response(c, http.StatusConflict, 409, nil, "Already exist user")
 		return
 	} else {
