@@ -7,20 +7,21 @@ import (
 )
 
 type User struct {
-	Name     string ` gorm:"unique"`
-	NickName string
-	Email    string
-	Password string
-	Roles    Roles
+	Name     string `json:"name" gorm:"unique"`
+	NickName string `json:"nick_name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Roles    Roles  `json:"roles"`
 	gorm.Model
 }
 
-type Article struct {
-	Title    string `json:"title" gorm:"unique"`
-	Content  string `json:"content"`
-	Category string `json:"category"`
-	Author   User   `json:"author" gorm:"foreignkey:Name"`
-	gorm.Model
+func (u *User) Scan(value interface{}) error {
+	bytesValue, _ := value.([]byte)
+	return json.Unmarshal(bytesValue, u)
+}
+
+func (u *User) Value() (driver.Value, error) {
+	return json.Marshal(u)
 }
 
 type Roles []string

@@ -19,16 +19,21 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import {useRoute,useRouter} from 'vue-router';
 import { NLayout,  NLayoutSider,  NMenu } from 'naive-ui';
 import Logo from '@/components/common/Tiny/Logo.vue';
 import menuOptions from './menu/option';
 import Main from './main/index.vue'
 
+
+onMounted(()=>{
+    document.title = $route.meta.title as string
+})
 const $route = useRoute()
 const $router = useRouter()
 const goRoute = (key: string)=>{
-    console.log(key)
+    document.title = $route.meta.title as string
     $router.push(key)
     // $router.push(`/${key}`)
 }

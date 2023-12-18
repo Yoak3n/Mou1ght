@@ -5,9 +5,11 @@ import (
 	"Mou1ght-Server/internal/controller"
 	"Mou1ght-Server/internal/dto"
 	"Mou1ght-Server/internal/model"
-	"github.com/gin-gonic/gin"
+	"Mou1ght-Server/package/logger"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func registerArticleRouter(g *gin.RouterGroup) {
@@ -15,6 +17,23 @@ func registerArticleRouter(g *gin.RouterGroup) {
 	//u.POST("/login/:name/:password", loginHandler)
 	//u.POST("/register/:name/:password", registerHandler)
 	u.GET("/info/:id", articleInfo)
+	u.POST("/add", articleAdd)
+}
+
+func articleAdd(c *gin.Context) {
+	article := new(dto.ArticleDTO)
+	err := c.BindJSON(&article)
+	logger.Info.Println(article)
+	if err != nil {
+		response.Fail(c, "Invalid article data", nil)
+	}
+	err = controller.AddArticle(article)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+	} else {
+		response.Success(c, nil, "add article successfully")
+	}
+
 }
 
 func articleInfo(c *gin.Context) {

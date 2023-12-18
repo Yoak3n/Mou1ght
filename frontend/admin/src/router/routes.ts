@@ -67,46 +67,46 @@ const routes:RouteRecordRaw[] =[
             },
         ]
     },{
-        path:'/product',
+        path:'/article',
         component:()=>import('@/layout/index.vue'),
         name:'Product',
         meta:{
-            title:'商品管理',
+            title:'文章管理',
             hidden:false,
             icon:'Goods'
         },
         children:[
             {
-                path:'/product/trademark',
-                component:()=>import('@/views/product/trademark/index.vue'),
+                path:'/article/list',
+                component:()=>import('@/views/article/list/index.vue'),
                 name:'Trademark',
                 meta:{
-                    title:'品牌管理',
-                    icopn:'PersonOutline'
+                    title:'文章列表',
+                    icon:'PersonOutline'
                 }
             },{
-                path:'/product/spu',
-                component:()=>import('@/views/product/spu/index.vue'),
+                path:'/article/spu',
+                component:()=>import('@/views/article/spu/index.vue'),
                 name:'Spu',
                 meta:{
                     title:'SPU管理',
-                    icopn:'PersonOutline'
+                    icon:'PersonOutline'
                 }
             },{
-                path:'/product/sku',
-                component:()=>import('@/views/product/sku/index.vue'),
+                path:'/article/sku',
+                component:()=>import('@/views/article/sku/index.vue'),
                 name:'Sku',
                 meta:{
                     title:'SKU管理',
-                    icopn:'PersonOutline'
+                    icon:'PersonOutline'
                 }
             },{
-                path:'/product/attr',
-                component:()=>import('@/views/product/attr/index.vue'),
+                path:'/article/attr',
+                component:()=>import('@/views/article/attr/index.vue'),
                 name:'Attr',
                 meta:{
                     title:'属性管理',
-                    icopn:'PersonOutline'
+                    icon:'PersonOutline'
                 }
             },
         ]

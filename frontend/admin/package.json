@@ -28,6 +28,7 @@
     "@vitejs/plugin-vue": "^4.5.2",
     "fast-glob": "^3.3.2",
     "naive-ui": "^2.35.0",
+    "postcss": "^8.4.32",
     "typescript": "^5.3.3",
     "vfonts": "^0.0.3",
     "vite": "^4.5.1",
