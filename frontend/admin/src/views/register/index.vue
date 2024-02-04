@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { NForm, NInput, NFormItem, NButton, FormInst, NGrid, NGi, FormItemRule, FormRules } from 'naive-ui'
-
+import { useRouter } from 'vue-router';
 import useUserStore from '@/store/modules/user';
 
 const userStore = useUserStore()
+const $router = useRouter()
 const model = ref({ username: '', password: '', repeat_password: '', check: false })
 let isLoading = ref(false)
 
@@ -49,6 +50,7 @@ const registerHandle = async () => {
   if (model.value.password === model.value.repeat_password) {
     try {
       await userStore.userRegister(model.value)
+      $router.push('/')
     } catch (error) {
       window.$notification.error({
         content: 'Error',

@@ -6,11 +6,12 @@ import (
 )
 
 func Response(c *gin.Context, httpStatusCode int, code int, data gin.H, message string) {
-	c.JSON(httpStatusCode, gin.H{
-		"code":    code,
-		"message": message,
-		"data":    data,
-	})
+	type Res struct {
+		Code    int         `json:"code"`
+		Message string      `json:"message"`
+		Data    interface{} `json:"data,omitempty"`
+	}
+	c.JSON(httpStatusCode, Res{Code: code, Message: message, Data: data})
 }
 
 func Success(c *gin.Context, data gin.H, message string) {

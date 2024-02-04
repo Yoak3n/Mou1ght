@@ -1,6 +1,7 @@
 package router
 
 import (
+	"Mou1ght-Server/api/middleware"
 	"Mou1ght-Server/api/response"
 	"Mou1ght-Server/internal/controller"
 	"Mou1ght-Server/internal/dto"
@@ -13,10 +14,18 @@ import (
 
 func registerArticleRouter(g *gin.RouterGroup) {
 	u := g.Group("/article")
-	//u.POST("/login/:name/:password", loginHandler)
-	//u.POST("/register/:name/:password", registerHandler)
 	u.GET("/info/:id", articleInfo)
-	u.POST("/add", articleAdd)
+	u.GET("/list", articleList)
+	u.POST("/add", middleware.AuthMiddleware(), articleAdd)
+}
+
+func articleList(c *gin.Context) {
+	articles, err := controller.GetArticleList()
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+	} else {
+		response.Success(c, gin.H{"articles": dto.ToArticleList(articles)}, "Get article list successfully")
+	}
 }
 
 func articleAdd(c *gin.Context) {

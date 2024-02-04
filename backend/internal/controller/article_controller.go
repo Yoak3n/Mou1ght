@@ -22,17 +22,16 @@ func CheckExistArticle(a *model.Article, id uint) (bool, *gorm.DB) {
 func AddArticle(a *dto.ArticlePostDTO) error {
 
 	authors := make([]model.User, 0)
-	for _, uid := range a.AuthorID {
-		user := GetUserByID(uid)
-		authors = append(authors, *user)
-	}
+	user := GetUserByID(uint(a.AuthorID))
+	authors = append(authors, *user)
 
 	if len(authors) != 0 {
 		article := &model.Article{
 			Title:       a.Title,
 			Description: a.Description,
 			Content:     a.Content,
-			Author:      authors,
+			Author:      uint(a.AuthorID),
+			AuthorName:  user.NickName,
 			Category:    a.Category,
 		}
 		result := db.Create(article)
@@ -45,6 +44,16 @@ func AddArticle(a *dto.ArticlePostDTO) error {
 		return errors.New("unauthorized user")
 	}
 
+}
+
+func GetArticleList() ([]*model.Article, error) {
+
+	articles := make([]*model.Article, 0)
+	result := db.Find(&articles)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return articles, nil
 }
 
 func GetArticleById(id uint) (*model.Article, error) {

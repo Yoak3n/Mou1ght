@@ -9,4 +9,4 @@ enum API{
 // 登录接口方法
 export const reqLogin = (data:loginForm)=>request.post<any,loginResponseData>(API.LOGIN_URL+`/${data.username}/${data.password}`);
 export const reqRegister = (data:loginForm)=>request.post<any,loginResponseData>(API.REGISTER_URL+`/${data.username}/${data.password}`,)
-export const reqUserInfo = ()=>request.get<userResponseData>(API.USERINFO_URL)
+export const reqUserInfo = ()=>request.get<any,userResponseData>(API.USERINFO_URL)

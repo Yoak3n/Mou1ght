@@ -13,13 +13,13 @@ import (
 
 func initMysql() *gorm.DB {
 	conf := config.Conf
-	dsn := fmt.Sprintf("%s:%s@tcp(localhost:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.MysqlName, conf.MysqlPassword, conf.MysqlPort, conf.DatabaseName)
+	dsn := fmt.Sprintf("%s:%s@tcp(localhost:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.DBName, conf.DBPassword, conf.DBPort, conf.DatabaseName)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Error.Println(fmt.Sprintf("database connected err:%v", err))
+		logger.Error.Printf("database connected err:%v\n", err)
 	}
 	if err != nil {
-		logger.Error.Println(fmt.Sprintf("database connected err:%v", err))
+		logger.Error.Printf("database connected err:%v\n", err)
 	}
 	return db
 }
