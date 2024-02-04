@@ -1,7 +1,12 @@
 <template>
     <div class="layout-wrapper">
         <n-layout has-sider class="menu">
-            <n-layout-sider content-style="padding: 12px;fontSize:50px" class="slider" width="300" :native-scrollbar="false">
+            <n-layout-sider 
+            content-style="padding: 12px;fontSize:50px" 
+            class="slider" 
+            width="300" 
+            bordered
+            :native-scrollbar="false">
                 <div class="options">
                     <logo />
                     <n-menu :options="menuOptions" inverted @update:value="goRoute" key-field="path" :value="$route.path">
@@ -10,7 +15,7 @@
                 </div>
 
             </n-layout-sider>
-
+            
             <n-layout>
                 <Main></Main>
             </n-layout>

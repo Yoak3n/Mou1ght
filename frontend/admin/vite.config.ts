@@ -16,6 +16,9 @@ export default defineConfig(({command})=>{
         symbolId:'icon-[dir]-[name]'
       })
     ],
+    server:{
+      port: 3000
+    },
     resolve: {
       alias:{
         "@": path.resolve("./src")

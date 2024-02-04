@@ -13,20 +13,21 @@ export interface loginResponseData{
     data :dataType
 }
 
-interface userInfo {
-    userId:number,
+export interface userInfo {
+    name:number,
+    email:string,
     avatar:string,
-    username:string,
-    password:string,
+    nick_name:string,
+    // password:string,
     desc:string,
     role:string[],
-    buttons:string[],
-    routes:string[],
-    token:string
+    // buttons:string[],
+    // routes:string[],
+    // token:string
 
 }
 interface user{
-    checkUser:userInfo
+    user:userInfo
 }
 
 // 定义服务器返回用户信息相关的数据类型

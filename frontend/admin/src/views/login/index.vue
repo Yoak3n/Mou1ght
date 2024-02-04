@@ -2,9 +2,6 @@
 import useUserStore from '@/store/modules/user';
 import { NForm, NInput, NFormItem, NButton, FormInst, NGrid, NGi,NCheckbox,FormItemRule,FormRules } from 'naive-ui'
 import { computed, ref } from 'vue';
-
-
-
 import { getTimeDutation } from '@/utils/time';
 import { useRouter } from 'vue-router';
 const model = ref({ username: '', password: '',check:false })
@@ -36,21 +33,6 @@ let rules:FormRules=  {
           trigger: ['input', 'blur'],
         }
     }
-// let vaild = ref(false)
-// watch(
-//   ()=>formRef.value?.validate,
-//   (currentValue,preValue)=>{
-//     if (currentValue != preValue){
-//       if (!currentValue){
-//         window.$message.success('Vaild')
-//         return vaild.value = true
-//       }else{
-//         window.$message.error('Invalid')
-//         return vaild.value = false
-//       }
-//     }
-//   }
-// )
 
 
 const showAgreement = ()=>{
@@ -102,7 +84,7 @@ const loginHandle =  async()=>{
             duration:2500,
             closable: false,
         })
-       
+        
        // 登录成功的提示信息
     }catch(error){
       window.$notification.error({

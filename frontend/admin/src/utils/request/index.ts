@@ -15,7 +15,7 @@ request.interceptors.request.use((config)=>{
     // config配置对象，headers属性请求头，经常给服务器携带公共参数
     const userStore = useUserStore()
     // 添加token认证请求头
-    config.headers.set("Authorization","Bearer "+userStore.token)
+    config.headers.set("Authorization","Bearer " + userStore.token)
     return config
 })
 

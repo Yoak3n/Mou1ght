@@ -79,7 +79,7 @@ const routes:RouteRecordRaw[] =[
             {
                 path:'/article/list',
                 component:()=>import('@/views/article/list/index.vue'),
-                name:'Trademark',
+                name:'ArticleList',
                 meta:{
                     title:'文章列表',
                     icon:'PersonOutline'
