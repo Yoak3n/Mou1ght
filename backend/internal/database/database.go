@@ -20,7 +20,7 @@ func init() {
 		logger.Info.Println("Already connected to Sqlite3")
 	case "mysql":
 		mdb = initMysql()
-		logger.Info.Println("Already connected to Mysql")
+		logger.Info.Println("Already connected to MySQL")
 	}
 	migrateTables(&model.Article{}, &model.User{})
 	conn, _ = mdb.DB()

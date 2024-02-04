@@ -9,6 +9,7 @@ type Article struct {
 	Title       string `json:"title" gorm:"unique"`
 	Content     string `json:"content"`
 	Category    string `json:"category"`
-	Author      []User `json:"author" gorm:"ForeignKey:Name" `
+	Author      uint   `json:"author"`
+	AuthorName  string `json:"author_name"`
 	Description string `json:"description"`
 }

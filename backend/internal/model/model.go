@@ -10,7 +10,9 @@ type User struct {
 	Name     uint   `json:"name" gorm:"unique"`
 	NickName string `json:"nick_name"`
 	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
 	Password string `json:"password"`
+	Desc     string `json:"desc"`
 	Roles    Roles  `json:"roles"`
 	gorm.Model
 }

@@ -2,16 +2,15 @@ package config
 
 import (
 	"Mou1ght-Server/package/logger"
-	"fmt"
 	"github.com/spf13/viper"
 )
 
 type Configuration struct {
 	SeverPort      int    `yaml:"sever_port"`
-	MysqlName      string `yaml:"mysql_name"`
-	MysqlPassword  string `yaml:"mysql_password"`
-	MysqlAddr      string `yaml:"mysql_addr"`
-	MysqlPort      int    `yaml:"mysql_port"`
+	DBName         string `yaml:"mysql_name"`
+	DBPassword     string `yaml:"mysql_password"`
+	DBAddr         string `yaml:"mysql_addr"`
+	DBPort         int    `yaml:"mysql_port"`
 	DatabaseName   string `yaml:"database_name"`
 	DatabaseOption string `yaml:"database_option"`
 	JwtKey         []byte `yaml:"jwt_key"`
@@ -21,17 +20,18 @@ var Conf *Configuration
 
 // database options
 const (
-	SQLITE3 = "sqlite3"
-	MYSQL   = "mysql"
+	SQLITE3    = "sqlite3"
+	MYSQL      = "mysql"
+	POSTGRESQL = "postgresql"
 )
 
 func init() {
 	v := viper.New()
 	Conf = new(Configuration)
 	v.SetDefault("SEVER_PORT", 10420)
-	v.SetDefault("MYSQL_NAME", "root")
-	v.SetDefault("MYSQL_ADDR", "127.0.0.1")
-	v.SetDefault("MYSQL_PORT", 3306)
+	v.SetDefault("DB_NAME", "root")
+	v.SetDefault("DB_ADDR", "127.0.0.1")
+	v.SetDefault("DB_PORT", 3306)
 	v.SetDefault("DB_NAME", "mou1ght")
 	v.SetDefault("DB_OPTION", SQLITE3)
 	v.SetDefault("JWT_KEY", "mou1ght")
@@ -42,8 +42,9 @@ func init() {
 	}
 	// check database option
 	if Conf.DatabaseOption != SQLITE3 && Conf.DatabaseOption != MYSQL {
-		logger.Error.Println(fmt.Sprintf("Please choose one database option :[%s,%s]", SQLITE3, MYSQL))
+		logger.Error.Printf("Please choose one database option :[%s,%s,%s]\n", SQLITE3, MYSQL, POSTGRESQL)
 	}
+	logger.Info.Println(Conf)
 
 }
 
@@ -77,10 +78,10 @@ func loadFromFile(v *viper.Viper) (readed bool) {
 
 func loadConfig(v *viper.Viper) {
 	Conf.SeverPort = v.GetInt("SEVER_PORT")
-	Conf.MysqlName = v.GetString("MYSQL_NAME")
-	Conf.MysqlPassword = v.GetString("MYSQL_PASSWORD")
-	Conf.MysqlAddr = v.GetString("MYSQL_ADDR")
-	Conf.MysqlPort = v.GetInt("MYSQL_PORT")
+	Conf.DBName = v.GetString("DB_NAME")
+	Conf.DBPassword = v.GetString("DB_PASSWORD")
+	Conf.DBAddr = v.GetString("DB_ADDR")
+	Conf.DBPort = v.GetInt("DB_PORT")
 	Conf.DatabaseName = v.GetString("DB_NAME")
 	Conf.DatabaseOption = v.GetString("DB_OPTION")
 	Conf.JwtKey = []byte(v.GetString("JWT_KEY"))
