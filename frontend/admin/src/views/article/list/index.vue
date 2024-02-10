@@ -1,17 +1,17 @@
 <template>
   <div class="article-list-wrapper">
-    <n-layout-header :bordered="true">
+    <n-layout-header :bordered="true" class="header">
+      <n-space justify="space-between" >
+        <BreadCrumb :title="path"/>
+        <n-button>创建文章</n-button>
+      </n-space>
+
+
+   
 
     </n-layout-header>
     <n-layout-content content-style="padding: 24px;">
-      <n-breadcrumb>
-        <n-breadcrumb-item>
-          <n-icon :component="MdCash" /> 北京总行</n-breadcrumb-item>
-        <n-breadcrumb-item>
-          <n-icon :component="MdCash" /> 天津分行</n-breadcrumb-item>
-        <n-breadcrumb-item>
-          <n-icon :component="MdCash" /> 平山道支行</n-breadcrumb-item>
-      </n-breadcrumb>
+
 
     </n-layout-content>
     <n-layout-footer>
@@ -21,22 +21,20 @@
 </template>
 <script setup lang="ts">
 import { reactive, h, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   NLayoutHeader,
   NLayoutContent,
+  NSpace,
   NLayoutFooter,
-  NBreadcrumb,
-  NBreadcrumbItem,
-  NIcon,
   NDataTable,
   DataTableColumns,
   NButton
 } from 'naive-ui'
-import { MdCash } from '@vicons/ionicons4';
 
 import { articleView } from '@/api/article/type'
 import { reqArticleList } from '@/api/article'
-
+import BreadCrumb  from '@/components/common/BreadCrumb/index.vue'
 type Article = {
   no: number
   title: string
@@ -83,15 +81,18 @@ const createColumns = ({
 }
 
 
-
+const $route = useRoute()
+let path = reactive<string[]>([])
+$route.matched.forEach((item) => {
+  if(item.meta.title  != undefined){
+    path.push(item.meta.title as string )
+  }
+})
 const columns = createColumns({
   play(row: Article) {
     window.$message.info(`Play ${row.title}`)
   }
 })
-
-
-
 const paginationReactive = reactive({
   page: 2,
   pageSize: 5,
@@ -108,7 +109,6 @@ const paginationReactive = reactive({
 const pagination = paginationReactive
 
 let articleList = reactive<Article[]>([])
-
 onMounted(() => {
   reqArticleList().then((v) => {
     const as: articleView[] = v.data.articles
@@ -128,8 +128,12 @@ onMounted(() => {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .article-list-wrapper {
+  margin-top: 1rem;
   height: 100%;
-  background-color: aqua
-}</style>
+  background-color: aqua;
+  .header{
+    padding: 0 1rem
+  }
+}</style> 

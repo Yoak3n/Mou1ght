@@ -69,7 +69,8 @@ const routes:RouteRecordRaw[] =[
     },{
         path:'/article',
         component:()=>import('@/layout/index.vue'),
-        name:'Product',
+        name:'Article',
+        redirect:'/article/list',
         meta:{
             title:'文章管理',
             hidden:false,

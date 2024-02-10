@@ -2,6 +2,8 @@ package config
 
 import (
 	"Mou1ght-Server/package/logger"
+	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -39,6 +41,10 @@ func init() {
 	if !ok {
 		loadFromEnv(v)
 		logger.Trace.Println("Load configuration from environment")
+	}
+	err := v.WriteConfig()
+	if err != nil {
+		fmt.Println(err)
 	}
 	// check database option
 	if Conf.DatabaseOption != SQLITE3 && Conf.DatabaseOption != MYSQL {
