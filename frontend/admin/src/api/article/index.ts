@@ -1,13 +1,12 @@
 import request from "@/utils/request"
-import type {articleView} from "./type"
+import type {articleDetail,articleViewResponse,articlePost} from "./type"
 
 
 enum API{
-    // REGISTER_URL = "/user/register",
-    // LOGIN_URL = "/user/login",
-    ARTICLELIST_URL = '/article/list'
+    ARTICLE_INFO_URL = "/article/info",
+    ARTICLA_ADD_URL = "/article/add",
+    ARTICLE_LIST_URL = '/article/list'
 }
-
-
-
-export const getArticleList = ()=>request.get<any,articleView[]>(API.ARTICLELIST_URL)
+export const reqArticleInfo = (id:number)=>request.get<any,articleDetail>(API.ARTICLE_INFO_URL+`/${id}`)
+export const reqArticleAdd = (data:articlePost)=>request.post<any,articleDetail>(API.ARTICLA_ADD_URL,data)
+export const reqArticleList = ()=>request.get<any,articleViewResponse>(API.ARTICLE_LIST_URL)

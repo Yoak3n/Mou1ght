@@ -5,6 +5,7 @@ import (
 )
 
 type ArticleDTO struct {
+	ID          uint   `json:"id"`
 	Title       string `json:"title"`
 	Content     string `json:"content"`
 	Category    string `json:"category"`
@@ -25,6 +26,7 @@ type ArticleView struct {
 	ID          uint   `json:"id"`
 	Title       string `json:"title"`
 	AuthorID    uint   `json:"author_id"`
+	AuthorName  string `json:"author_name"`
 	Category    string `json:"category"`
 	Description string `json:"description"`
 }
@@ -37,6 +39,7 @@ func ToArticleList(as []*model.Article) []ArticleView {
 			ID:          article.ID,
 			Title:       article.Title,
 			AuthorID:    article.Author,
+			AuthorName:  article.AuthorName,
 			Category:    article.Category,
 			Description: article.Description,
 		})
@@ -46,6 +49,7 @@ func ToArticleList(as []*model.Article) []ArticleView {
 
 func ToArticleDTO(a *model.Article) ArticleDTO {
 	return ArticleDTO{
+		ID:          a.ID,
 		Title:       a.Title,
 		Content:     a.Content,
 		Category:    a.Category,
