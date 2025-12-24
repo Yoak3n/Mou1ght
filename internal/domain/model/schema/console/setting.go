@@ -3,6 +3,7 @@ package console
 type BlogSetting struct {
 	NavBar      NavBar      `yaml:"nav_bar" json:"nav_bar"`
 	BottomExtra BottomExtra `yaml:"bottom_extra" json:"bottom_extra"`
+	Board       Board       `yaml:"board" json:"board"`
 }
 
 func DefaultBlogSetting() BlogSetting {
@@ -25,6 +26,11 @@ func DefaultBlogSetting() BlogSetting {
 		BottomExtra: BottomExtra{
 			HTML: "",
 			CSS:  "",
+		},
+		Board: Board{
+			Question:     "",
+			Answer:       "",
+			NeedReviewed: false,
 		},
 	}
 }
