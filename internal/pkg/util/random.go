@@ -2,6 +2,7 @@ package util
 
 import (
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -14,34 +15,44 @@ func generateRandomString(n int) string {
 	return string(b)
 }
 
+func nowSecondToString() string {
+	s := strconv.FormatInt(time.Now().Unix(), 10)
+	return s
+}
+
+func nowMilliSecondToString() string {
+	s := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	return s
+}
+
 func GenUserID() string {
-	return "user-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "user-" + nowSecondToString()[5:] + generateRandomString(6)
 }
 
 func GenArticleID() string {
-	return "art-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "art-" + nowSecondToString()[5:] + generateRandomString(6)
 }
 
 func GenCategoryID() string {
-	return "cat-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "cat-" + nowSecondToString()[5:] + generateRandomString(6)
 }
 
 func GenCategoryLinkID() string {
-	return "clk-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "clk-" + nowMilliSecondToString()[8:] + generateRandomString(6)
 }
 
 func GenTagID() string {
-	return "tag-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "tag-" + nowSecondToString()[5:] + generateRandomString(6)
 }
 
 func GenTagLinkID() string {
-    return "tlk-" + string(rune(time.Now().Nanosecond()))[8:] + generateRandomString(6)
+	return "tlk-" + nowMilliSecondToString()[8:] + generateRandomString(6)
 }
 
 func GenSharingID() string {
-    return "sha-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "sha-" + nowSecondToString()[5:] + generateRandomString(6)
 }
 
 func GenMessageID() string {
-    return "msg-" + string(rune(time.Now().Second()))[5:] + generateRandomString(6)
+	return "msg-" + nowSecondToString()[5:] + generateRandomString(6)
 }

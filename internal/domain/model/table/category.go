@@ -8,7 +8,7 @@ import (
 
 type CategoryTable struct {
 	ID        string `gorm:"primary_key;not null;"`
-	Label     string `gorm:"not null;"`
+	Label     string `gorm:"not null;unique"`
 	ParentID  string
 	CreatedAt time.Time
 	UpdatedAt time.Time

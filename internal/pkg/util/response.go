@@ -2,7 +2,7 @@ package util
 
 import "github.com/gofiber/fiber/v2"
 
-func Response(c *fiber.Ctx, status int, code int, data interface{}, message ...string) error {
+func Response(c *fiber.Ctx, status int, code int, data any, message ...string) error {
 	result := fiber.Map{
 		"code": code,
 		"data": data,
@@ -13,10 +13,10 @@ func Response(c *fiber.Ctx, status int, code int, data interface{}, message ...s
 	return c.Status(status).JSON(result)
 }
 
-func SuccessResponse(c *fiber.Ctx, data interface{}, message ...string) error {
+func SuccessResponse(c *fiber.Ctx, data any, message ...string) error {
 	return Response(c, 200, 0, data, message...)
 }
 
-func ErrorResponse(c *fiber.Ctx, code int, message ...string) error {
-	return Response(c, code, -1, nil, message...)
+func ErrorResponse(c *fiber.Ctx, status int, message ...string) error {
+	return Response(c, status, -1, nil, message...)
 }

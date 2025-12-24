@@ -8,22 +8,47 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ArticleTag TagType = 1
+	SharingTag TagType = 2
+)
+
+type TagType = int
+
 func (d *Database) CreateTag(tag *table.TagTable) error {
 	return d.DB.Create(tag).Error
+}
+
+func (d *Database) GetAllTags() ([]table.TagTable, error) {
+	tags := make([]table.TagTable, 0)
+	err := d.DB.Find(&tags).Error
+	return tags, err
+}
+
+func (d *Database) GetTagByID(id string) (*table.TagTable, error) {
+	tag := &table.TagTable{}
+	err := d.DB.Where("id = ?", id).First(tag).Error
+	return tag, err
+}
+
+func (d *Database) GetTagsByID(ids []string) ([]table.TagTable, error) {
+	tags := make([]table.TagTable, 0)
+	err := d.DB.Where("id IN ?", ids).Find(&tags).Error
+	return tags, err
 }
 
 func (d *Database) UpdateTag(tag *table.TagTable) error {
 	return d.DB.Save(tag).Error
 }
 
-func (d *Database) UpdateTargetLinks(targetID string, targetType int, ids map[string]bool) error {
+func (d *Database) UpdateTargetLinks(targetID string, targetType TagType, ids map[string]bool) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	currentIDs := make([]string, 0)
 	unhandledIDs := make(map[string]bool)
 	maps.Copy(unhandledIDs, ids)
-	err := d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("id", &currentIDs).Error
+	err := d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &currentIDs).Error
 	if err != nil {
 		return err
 	}
@@ -70,6 +95,15 @@ func (d *Database) QueryTagsByLabel(label []string) ([]table.TagTable, error) {
 	tags := make([]table.TagTable, 0)
 	err := d.DB.Where("label IN ?", label).Find(&tags).Error
 	return tags, err
+}
+
+func (d *Database) QueryTagsByID(targetID string, targetType TagType) ([]table.TagTable, error) {
+	ids := make([]string, 0)
+	err := d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return d.GetTagsByID(ids)
 }
 
 func (d *Database) DeleteTagLink(linkID string) error {

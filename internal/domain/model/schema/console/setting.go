@@ -1,14 +1,13 @@
 package console
 
 type BlogSetting struct {
-	NavBar
-	BottomExtra
+	NavBar      NavBar      `yaml:"nav_bar" json:"nav_bar"`
+	BottomExtra BottomExtra `yaml:"bottom_extra" json:"bottom_extra"`
 }
 
 func DefaultBlogSetting() BlogSetting {
 	return BlogSetting{
 		NavBar: NavBar{
-			SearchBox: "",
 			Links: []Link{
 				{
 					Typ:   "Home",
@@ -32,13 +31,12 @@ func DefaultBlogSetting() BlogSetting {
 
 func (bs *BlogSetting) ToMap() map[string]any {
 	return map[string]any{
-		"search_box": bs.SearchBox,
-		"links":      bs.Links,
-		"title":      bs.WebsiteInformation.Title,
-		"icon":       bs.WebsiteInformation.Icon,
-		"logo":       bs.WebsiteInformation.Logo,
-		"keywords":   bs.WebsiteInformation.Keywords,
-		"html":       bs.BottomExtra.HTML,
-		"css":        bs.BottomExtra.CSS,
+		"links":    bs.NavBar.Links,
+		"title":    bs.NavBar.WebsiteInformation.Title,
+		"icon":     bs.NavBar.WebsiteInformation.Icon,
+		"logo":     bs.NavBar.WebsiteInformation.Logo,
+		"keywords": bs.NavBar.WebsiteInformation.Keywords,
+		"html":     bs.BottomExtra.HTML,
+		"css":      bs.BottomExtra.CSS,
 	}
 }

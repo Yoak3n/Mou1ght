@@ -9,8 +9,8 @@ func GetAllSetting() (map[string]any, error) {
 	return config.GetConfig().ToMap(), nil
 }
 
-func GetBlogSetting() (map[string]any, error) {
-	return config.GetConfig().Blog.ToMap(), nil
+func GetBlogSetting() (console.BlogSetting, error) {
+	return config.GetConfig().Blog, nil
 }
 
 func UpdateBlogSetting(setting console.BlogSetting) error {

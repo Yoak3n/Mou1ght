@@ -3,18 +3,13 @@ package entity
 import "Mou1ght/internal/domain/model/table"
 
 type TagWithArticlesEntity struct {
-	Tag      TagInformationEntity `json:"tag"`
-	Articles []ArticleEntity      `json:"articles"`
+	Tag      PostSign        `json:"tag"`
+	Articles []ArticleEntity `json:"articles"`
 }
 
 type TagWithSharingEntity struct {
-	Tag      TagInformationEntity `json:"tag"`
-	Sharings []SharingEntity      `json:"sharings"`
-}
-
-type TagInformationEntity struct {
-	ID    string `json:"id"`
-	Label string `json:"label"`
+	Tag      PostSign        `json:"tag"`
+	Sharings []SharingEntity `json:"sharings"`
 }
 
 func NewTagWithArticlesEntityFromTable(tag *table.TagTable, articles []table.ArticleTable) *TagWithArticlesEntity {
@@ -39,9 +34,17 @@ func NewTagWithSharingEntityFromTable(tag *table.TagTable, sharings []table.Shar
 	}
 }
 
-func NewTagInformationEntityFromTable(tag *table.TagTable) TagInformationEntity {
-	return TagInformationEntity{
+func NewTagInformationEntityFromTable(tag *table.TagTable) PostSign {
+	return PostSign{
 		ID:    tag.ID,
 		Label: tag.Label,
 	}
+}
+
+func NewTagsInformationEntityFromTable(tags []table.TagTable) []PostSign {
+	s := make([]PostSign, len(tags))
+	for i, tag := range tags {
+		s[i] = NewTagInformationEntityFromTable(&tag)
+	}
+	return s
 }

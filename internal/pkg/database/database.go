@@ -1,6 +1,7 @@
 package database
 
 import (
+	"Mou1ght/internal/config"
 	"Mou1ght/internal/domain/model/table"
 	"fmt"
 	"path"
@@ -26,8 +27,18 @@ func initSqlite(dir string, name string) *gorm.DB {
 	return sdb
 }
 
-func InitDatabase(path string, name string) *gorm.DB {
-	db := initSqlite(path, name)
+func InitDatabase() *gorm.DB {
+	d := config.GetConfig().Database
+	var db *gorm.DB
+	switch d.Type {
+	case "sqlite":
+		db = initSqlite("", d.DSN)
+	case "postgres":
+		db = initPostgres(d.DSN)
+	default:
+		db = initSqlite("", config.DefaultDatabaseSetting().DSN)
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		panic(err)

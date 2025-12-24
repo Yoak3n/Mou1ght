@@ -8,7 +8,7 @@ import (
 
 type UserTable struct {
 	ID        string `gorm:"primary_key;not null;"`
-	UserName  string `gorm:"not null;"`
+	UserName  string `gorm:"not null"`
 	Password  string `gorm:"not null;"`
 	Avatar    string
 	Email     string

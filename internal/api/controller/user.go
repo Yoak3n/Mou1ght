@@ -7,24 +7,24 @@ import (
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/instance"
 	"errors"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 func UserLoginCheck(req *request.UserLoginRequest) (string, error) {
-	user, err := instance.UseDatabase().QueryUser([]string{req.UserName})
+	user, err := instance.UseDatabase().GetUserByName(req.UserName)
 	if err != nil {
 		return "", err
 	}
-	if len(user) < 1 {
-		return "", errors.New("user not found")
-	}
-	err = bcrypt.CompareHashAndPassword([]byte(user[0].Password), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		return "", errors.New("password incorrect")
 	}
-	return user[0].ID, nil
+	user.LastLogin = time.Now()
+	_ = instance.UseDatabase().UpdateUser(user)
+	return user.ID, nil
 }
 
 func UserRegisterCheck(req *request.UserRegisterRequest) (*table.UserTable, error) {
@@ -40,6 +40,7 @@ func UserRegisterCheck(req *request.UserRegisterRequest) (*table.UserTable, erro
 	record := &table.UserTable{
 		ID:       uid,
 		UserName: req.UserName,
+		Email:    req.Email,
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -66,7 +67,7 @@ func AuthorListWithPost(req *request.PostListRequest) map[string]any {
 	ret := make(map[string]any)
 	filter := req.Filter
 	descend := filter.Sort == "desc"
-	authors, err := instance.UseDatabase().QueryUser(req.Data.Keyword)
+	authors, err := instance.UseDatabase().QueryUsers(req.Data.Keyword)
 	if err != nil {
 		return nil
 	}

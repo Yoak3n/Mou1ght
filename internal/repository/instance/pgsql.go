@@ -15,7 +15,7 @@ var once sync.Once
 var db *Database
 
 func NewDatabase() *Database {
-	return &Database{DB: database.InitDatabase("", "")}
+	return &Database{DB: database.InitDatabase()}
 }
 
 func UseDatabase() *Database {

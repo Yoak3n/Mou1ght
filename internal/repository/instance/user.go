@@ -12,9 +12,15 @@ func (d *Database) GetUser(id string) (*table.UserTable, error) {
 	return user, err
 }
 
-func (d *Database) QueryUser(username []string) ([]table.UserTable, error) {
+func (d *Database) GetUserByName(name string) (*table.UserTable, error) {
+	user := &table.UserTable{}
+	err := d.DB.First(user).Where("user_name = ?", name).Error
+	return user, err
+}
+
+func (d *Database) QueryUsers(username []string) ([]table.UserTable, error) {
 	users := make([]table.UserTable, 0)
-	err := d.DB.Find(users).Where("user_name IN ?", username).Error
+	err := d.DB.Find(&users).Where("user_name IN ?", username).Error
 	if err != nil {
 		return nil, err
 	}

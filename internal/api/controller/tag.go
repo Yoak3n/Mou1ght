@@ -6,7 +6,31 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/instance"
+	"fmt"
 )
+
+func CreateTag(req *request.CreateTagRequest) error {
+	record := &table.TagTable{
+		ID:    util.GenTagID(),
+		Label: req.Label,
+	}
+	return instance.UseDatabase().DB.Create(record).Error
+}
+
+func DeleteTag(id string) error {
+	if id == "" {
+		return fmt.Errorf("tag id is empty")
+	}
+	return instance.UseDatabase().DB.Delete(&table.TagTable{ID: id}).Error
+}
+
+func TagsList() []entity.PostSign {
+	records, err := instance.UseDatabase().GetAllTags()
+	if err != nil {
+		return nil
+	}
+	return entity.NewTagsInformationEntityFromTable(records)
+}
 
 // TagListWithPost 根据请求参数获取带有文章或分享的标签列表
 // 参数:
@@ -17,7 +41,7 @@ import (
 // 返回值:
 //
 //	map[string]any - 包含标签列表的映射，可能为nil(当发生错误时)
-func TagListWithPost(req *request.PostListRequest, isSharing bool) map[string]any {
+func TagListWithPost(req *request.PostListRequest, typ string) map[string]any {
 	// 初始化返回结果集
 	ret := make(map[string]any)
 	// 获取请求中的过滤条件
@@ -25,10 +49,9 @@ func TagListWithPost(req *request.PostListRequest, isSharing bool) map[string]an
 	// 判断是否为降序排列
 	descend := filter.Sort == "desc"
 	// 设置默认类型为文章
-	typ := "article"
-	if isSharing {
+
+	if typ == "sharing" {
 		// 如果是分享类型，设置类型为分享并初始化分享标签切片
-		typ = "sharing"
 		ret["tags"] = make([]*entity.TagWithSharingEntity, 0)
 	} else {
 		// 否则初始化文章标签切片
@@ -43,7 +66,7 @@ func TagListWithPost(req *request.PostListRequest, isSharing bool) map[string]an
 
 	// 遍历标签链接
 	for i := range links {
-		if isSharing {
+		if typ == "sharing" {
 			// 处理分享类型标签
 			sharings, err := instance.UseDatabase().GetSharingFromTagLink(&links[i], descend)
 			if err != nil {

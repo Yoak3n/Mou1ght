@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var sampleJwtKey = "sampleJwtKey"
+var sampleJwtKey = []byte("sampleJwtKey")
 
 type Claims struct {
 	UID uint

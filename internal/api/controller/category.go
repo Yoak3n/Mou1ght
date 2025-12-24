@@ -6,7 +6,48 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/instance"
+	"errors"
 )
+
+func CreateCategory(data request.CategoryRequest) error {
+	record := &table.CategoryTable{
+		ID:    util.GenCategoryID(),
+		Label: data.Label,
+	}
+	if data.Parent != "" {
+		record.ParentID = data.Parent
+	}
+	return instance.UseDatabase().CreateCategory(record)
+}
+
+func UpdateCategory(categoryID string, data request.CategoryRequest) error {
+	if categoryID == "" {
+		return errors.New("category id is empty")
+	}
+	record := &table.CategoryTable{
+		ID:    categoryID,
+		Label: data.Label,
+	}
+	if data.Parent != "" {
+		record.ParentID = data.Parent
+	}
+	return instance.UseDatabase().UpdateCategory(record)
+}
+
+func DeleteCategory(categoryID string) error {
+	if categoryID == "" {
+		return errors.New("category id is empty")
+	}
+	return instance.UseDatabase().DeleteCategory(categoryID)
+}
+
+func CategoryList() []*entity.CategoryGroup {
+	categories, err := instance.UseDatabase().GetAllCategories()
+	if err != nil {
+		return nil
+	}
+	return entity.NewCategoryGroupFromTables(categories)
+}
 
 // CategoryListWithArticle 根据请求参数获取分类列表及其包含的文章
 /**

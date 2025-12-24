@@ -8,11 +8,6 @@ type CreateArticleRequest struct {
 	Tags       []Sign `json:"tags"`
 }
 
-type Sign struct {
-	ID    string `json:"id"`
-	Label string `json:"label"`
-}
-
 type UpdateArticleRequest struct {
 	CreateArticleRequest
 	ID string `json:"id"`

@@ -56,9 +56,9 @@ func (d *Database) GetArticlesByAuthorID(id string, desc bool) ([]table.ArticleT
 
 func (d *Database) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*table.ArticleTable, error) {
 	articles := make([]*table.ArticleTable, 0)
-	order := "create_at ASC"
+	order := "created_at ASC"
 	if desc {
-		order = "create_at DESC"
+		order = "created_at DESC"
 	}
 	err := d.DB.Find(&articles).Where("user_id IN ?", ids).Order(order).Error
 	if err != nil {
@@ -69,10 +69,21 @@ func (d *Database) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*table.Art
 
 func (d *Database) GetArticles(startDate, endDate *time.Time) ([]*table.ArticleTable, error) {
 	articles := make([]*table.ArticleTable, 0)
+	var query *gorm.DB
 	if startDate != nil {
-
+		if endDate == nil {
+			query = d.DB.Where("created_at >= ?", startDate)
+		} else {
+			query = d.DB.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+		}
+	} else {
+		if endDate == nil {
+			query = d.DB
+		} else {
+			query = d.DB.Where("created_at <= ?", endDate)
+		}
 	}
-	err := d.DB.Where("created_at BETWEEN ? AND ?", startDate, endDate).Find(&articles).Error
+	err := query.Order("created_at DESC").Find(&articles).Error
 	if err != nil {
 		return nil, err
 	}

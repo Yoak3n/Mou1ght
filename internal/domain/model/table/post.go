@@ -11,7 +11,7 @@ type PostBase struct {
 	Content string `gorm:"not null;"`
 	Like    int64  `gorm:"not null;default:0"`
 	View    int64  `gorm:"not null;default:0"`
-	// 0 for draft, 1 for publish, 2 for hide
+	// 0 for draft, 1 for publish, 2 for archive, 3 for pending review
 	Status    int8 `gorm:"not null;default:0"`
 	CreatedAt time.Time
 	UpdatedAt time.Time

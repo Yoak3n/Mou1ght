@@ -4,25 +4,29 @@ import (
 	"Mou1ght/internal/api/controller"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/pkg/util"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func ListPost(c *fiber.Ctx) error {
+	name, _ := strings.CutSuffix(c.Route().Name, ".list")
 	req := &request.PostListRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	resultMap := make(map[string]interface{})
+	resultMap := make(map[string]any)
 	// 除all外暂时未支持date_range，看需求是否需要
 	switch req.Filter.Typ {
 	case "category":
 		resultMap = controller.CategoryListWithArticle(req)
 	case "tag":
-		resultMap = controller.TagListWithPost(req, req.IsSharing)
+		resultMap = controller.TagListWithPost(req, name)
 	case "author":
 		resultMap = controller.AuthorListWithPost(req)
+	case "single":
+		resultMap = controller.SingleListWithPost(req, name)
 	case "all":
 		resultMap = controller.AllListWithPost(req)
 	default:

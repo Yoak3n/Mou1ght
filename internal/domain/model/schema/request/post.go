@@ -1,9 +1,14 @@
 package request
 
+// Sign is a struct for category or tag
+type Sign struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+}
+
 type PostListRequest struct {
-	IsSharing bool           `json:"is_sharing"`
-	Filter    PostFilter     `json:"filter"`
-	Data      PostFilterData `json:"data"`
+	Filter PostFilter     `json:"filter"`
+	Data   PostFilterData `json:"data"`
 }
 
 type PostFilter struct {
