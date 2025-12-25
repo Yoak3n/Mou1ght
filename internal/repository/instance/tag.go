@@ -114,8 +114,8 @@ func (d *Database) DeleteTagLinkByTagID(tagID string) error {
 	return d.DB.Where("tag_id = ?", tagID).Delete(&table.TagLinkTable{}).Error
 }
 
-func (d *Database) DeleteTagLinkFromTarget(targetID string, targetType int) error {
-	return d.DB.Where("target_id = ? AND target_type = ", targetID, targetType).Delete(&table.TagLinkTable{}).Error
+func (d *Database) DeleteTagLinkFromTarget(targetID string, targetType TagType) error {
+	return d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Delete(&table.TagLinkTable{}).Error
 }
 
 func (d *Database) GetTagLinkByKeyword(keyword []string, typ string) (map[string]table.TagTable, []table.TagLinkTable, error) {

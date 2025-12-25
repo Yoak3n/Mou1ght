@@ -6,8 +6,11 @@ type NavBar struct {
 }
 
 type Link struct {
-	Typ   string `json:"type" yaml:"type"`
-	Href  string `json:"href" yaml:"href"`
+	// 链接类型，home 表示首页，category 表示分类链接，external 表示外部链接，tag 表示标签链接
+	Type string `json:"type" yaml:"type"`
+	// 链接地址
+	Href string `json:"href" yaml:"href"`
+	// 链接显示文本
 	Label string `json:"label" yaml:"label"`
 }
 

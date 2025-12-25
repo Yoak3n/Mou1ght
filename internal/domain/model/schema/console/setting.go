@@ -11,7 +11,7 @@ func DefaultBlogSetting() BlogSetting {
 		NavBar: NavBar{
 			Links: []Link{
 				{
-					Typ:   "Home",
+					Type:  "home",
 					Href:  "/",
 					Label: "Home",
 				},
