@@ -16,6 +16,7 @@ func ListPost(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
+
 	resultMap := make(map[string]any)
 	// 除all外暂时未支持date_range，看需求是否需要
 	switch req.Filter.Typ {

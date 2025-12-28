@@ -16,7 +16,7 @@ func InitRouter() *fiber.App {
 
 func setupRouter(r *fiber.App) {
 	r.Static("/upload", consts.Upload, fiber.Static{
-		Download: true,
+		// Download: true,
 	})
 	setupApiRouter(r)
 }
