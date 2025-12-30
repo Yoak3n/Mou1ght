@@ -1,13 +1,14 @@
 package controller
 
 import (
-    "Mou1ght/internal/domain/entity"
-    "Mou1ght/internal/domain/model/schema/request"
-    "Mou1ght/internal/domain/model/table"
-    "Mou1ght/internal/pkg/util"
-    "Mou1ght/internal/repository/instance"
-    "errors"
-    "time"
+	"Mou1ght/internal/config"
+	"Mou1ght/internal/domain/entity"
+	"Mou1ght/internal/domain/model/schema/request"
+	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/pkg/util"
+	"Mou1ght/internal/repository/instance"
+	"errors"
+	"time"
 )
 
 func CreateMessage(req *request.CreateMessageRequest) error {
@@ -35,6 +36,9 @@ func UpdateMessage(req *request.UpdateMessageRequest) error {
         Y:        req.Position.Y,
         Z:        req.Position.Z,
         AuthorIP: req.AuthorIP,
+    }
+    if config.GetConfig().Blog.Board.NeedReviewed {
+        record.Status = 3
     }
     return instance.UseDatabase().UpdateMessage(record)
 }

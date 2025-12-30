@@ -4,6 +4,7 @@ import (
 	"Mou1ght/internal/domain/entity"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/repository/instance"
+	"errors"
 	"time"
 )
 
@@ -45,4 +46,22 @@ func AllListWithPost(req *request.PostListRequest) map[string]any {
 	ret["sharings"] = queryPost(req, "sharing")["sharings"]
 	ret["messages"] = queryPost(req, "message")["messages"]
 	return ret
+}
+
+func UpdatePostStatus(req *request.UpdatePostStatusRequest) error {
+	status := int8(0)
+	switch req.Status {
+	case "draft":
+		status = 0
+	case "publish":
+		status = 1
+	case "archive":
+		status = 2
+	// pending only for message
+	// case "pending":
+	// 	status = 3
+	default:
+		return errors.New("invalid status")
+	}
+	return instance.UseDatabase().UpdatePostStatus(req.PostType, req.ID, status)
 }

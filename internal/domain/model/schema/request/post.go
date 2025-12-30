@@ -11,6 +11,12 @@ type PostListRequest struct {
 	Data   PostFilterData `json:"data"`
 }
 
+type UpdatePostStatusRequest struct {
+	PostType string `json:"post_type"`
+	ID       string `json:"post_id"`
+	Status   string `json:"status"`
+}
+
 type PostFilter struct {
 	Typ       string          `json:"type"`
 	DateRange *PostFilterDate `json:"date_range,omitempty"`

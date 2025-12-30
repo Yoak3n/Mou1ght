@@ -37,6 +37,19 @@ func ListPost(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, resultMap)
 }
 
+func UpdatePostStatus(c *fiber.Ctx) error {
+	req := &request.UpdatePostStatusRequest{}
+	err := c.BodyParser(req)
+	if err != nil {
+		return util.ErrorResponse(c, 400, err.Error())
+	}
+	err = controller.UpdatePostStatus(req)
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, nil)
+}
+
 func ViewPost(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
