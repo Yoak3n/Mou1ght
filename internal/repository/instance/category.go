@@ -4,8 +4,6 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"maps"
-
-	"gorm.io/gorm"
 )
 
 func (d *Database) CreateCategory(category *table.CategoryTable) error {
@@ -91,11 +89,12 @@ func (d *Database) QueryCategoriesByArticleID(articleID string) ([]table.Categor
 
 func (d *Database) GetCategoryLinkByKeyword(keyword []string) (map[string]table.CategoryTable, []table.CategoryLinkTable, error) {
 	categories := make([]table.CategoryTable, 0)
-	categoriesIds := make([]string, 0)
+	
 	err := d.DB.Where("label in ?", keyword).Find(&categories).Error
 	if err != nil {
 		return nil, nil, err
 	}
+	categoriesIds := make([]string, len(categories))
 	categoriesMap := make(map[string]table.CategoryTable)
 	for i, cat := range categories {
 		categoriesIds[i] = cat.ID
@@ -112,12 +111,12 @@ func (d *Database) GetCategoryLinkByKeyword(keyword []string) (map[string]table.
 
 func (d *Database) GetArticlesFromCategoryLink(link *table.CategoryLinkTable, desc bool) ([]table.ArticleTable, error) {
 	articles := make([]table.ArticleTable, 0)
-	query := d.DB.Model(&table.ArticleTable{}).Preload("created_at", func(tx *gorm.DB) *gorm.DB {
-		if desc {
-			return tx.Order("created_at desc")
-		}
-		return tx.Order("created_at asc")
-	}).Where("id = ?", link.ArticleID)
+	query := d.DB.Model(&table.ArticleTable{}).Where("id = ?", link.ArticleID)
+	if desc {
+		query = query.Order("created_at desc")
+	} else {
+		query = query.Order("created_at asc")
+	}
 	err := query.Find(&articles).Error
 	if err != nil {
 		return nil, err

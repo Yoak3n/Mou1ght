@@ -11,7 +11,10 @@ func runApp() {
 	config.GetConfig()
 	util.CreateDirNotExists(consts.Upload)
 	r := router.InitRouter()
-	r.Listen(":10420")
+	e := r.Listen(":10420")
+	if e != nil {
+		panic(e)
+	}
 }
 
 func main() {

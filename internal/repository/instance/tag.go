@@ -4,8 +4,6 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"maps"
-
-	"gorm.io/gorm"
 )
 
 const (
@@ -136,7 +134,7 @@ func (d *Database) GetTagLinkByKeyword(keyword []string, typ string) (map[string
 	if typ == "sharing" {
 		t = 2
 	}
-	err = d.DB.Where("target_id IN ? AND target_type = ?", tagsIds, t).Find(&links).Error
+	err = d.DB.Where("tag_id IN ? AND target_type = ?", tagsIds, t).Find(&links).Error
 	if err != nil {
 		return nil, nil, err
 	}
@@ -145,12 +143,12 @@ func (d *Database) GetTagLinkByKeyword(keyword []string, typ string) (map[string
 
 func (d *Database) GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) ([]table.ArticleTable, error) {
 	articles := make([]table.ArticleTable, 0)
-	query := d.DB.Model(&table.ArticleTable{}).Preload("created_at", func(tx *gorm.DB) *gorm.DB {
-		if desc {
-			return tx.Order("created_at DESC")
-		}
-		return tx.Order("created_at asc")
-	}).Where("id = ?", link.TargetID)
+	query := d.DB.Model(&table.ArticleTable{}).Where("id = ?", link.TargetID)
+	if desc {
+		query = query.Order("created_at DESC")
+	} else {
+		query = query.Order("created_at asc")
+	}
 	err := query.Find(&articles).Error
 	if err != nil {
 		return nil, err
@@ -160,12 +158,12 @@ func (d *Database) GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) (
 
 func (d *Database) GetSharingFromTagLink(link *table.TagLinkTable, desc bool) ([]table.SharingTable, error) {
 	sharings := make([]table.SharingTable, 0)
-	query := d.DB.Model(&table.SharingTable{}).Preload("created_at", func(tx *gorm.DB) *gorm.DB {
-		if desc {
-			return tx.Order("created_at DESC")
-		}
-		return tx.Order("created_at asc")
-	}).Where("id = ?", link.TargetID)
+	query := d.DB.Model(&table.SharingTable{}).Where("id = ?", link.TargetID)
+	if desc {
+		query = query.Order("created_at DESC")
+	} else {
+		query = query.Order("created_at asc")
+	}
 	err := query.Find(&sharings).Error
 	if err != nil {
 		return nil, err

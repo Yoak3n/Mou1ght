@@ -86,7 +86,7 @@ func TagListWithPost(req *request.PostListRequest, typ string) map[string]any {
 				continue
 			}
 			// 获取标签记录并创建文章标签实体
-			tagRecord := tags[links[i].TargetID]
+			tagRecord := tags[links[i].TagID]
 			tag := entity.NewTagWithArticlesEntityFromTable(&tagRecord, articles)
 			// 将标签添加到结果集中
 			ret["tags"] = append(ret["tags"].([]*entity.TagWithArticlesEntity), tag)

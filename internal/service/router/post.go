@@ -33,9 +33,10 @@ func setupSharingRouter(r fiber.Router) {
 
 func setupMessageRouter(r fiber.Router) {
 	message := r.Group("/message").Name("message.")
-	message.Post("/create", middleware.Auth, handler.CreateMessage)
+	message.Post("/create", handler.CreateMessage)
 	message.Delete("/delete/:id", middleware.Auth, handler.DeleteMessage)
 	message.Put("/update", middleware.Auth, handler.UpdateMessage)
+	message.Post("/position",  handler.UpdateMessagePosition)
 	message.Post("/list", handler.ListMessage).Name("list")
 	message.Post("/status", middleware.Auth, handler.UpdatePostStatus)
 	message.Get("/detail/:id", handler.DetailMessage).Name("detail")

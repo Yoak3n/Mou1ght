@@ -11,6 +11,7 @@ type MessageEntity struct {
 	Position MessagePosition `json:"position"`
 	State    PostState       `json:"state"`
 	Time     PostTimeInfo    `json:"time"`
+	AuthorIP string          `json:"author_ip"`
 }
 
 type MessagePosition struct {
@@ -35,7 +36,7 @@ func NewMessageEntityFromTable(msg *table.MessageTable) *MessageEntity {
 			Length: length,
 			Status: StatusIntToString(msg.Status),
 		},
-
+		AuthorIP: msg.AuthorIP,
 		Time: PostTimeInfo{
 			CreatedAt: msg.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt: msg.UpdatedAt.Format("2006-01-02 15:04:05"),

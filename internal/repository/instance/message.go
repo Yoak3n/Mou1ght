@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"time"
 
@@ -13,6 +14,18 @@ func (d *Database) CreateMessage(msg *table.MessageTable) error {
 
 func (d *Database) UpdateMessage(msg *table.MessageTable) error {
 	return d.DB.Save(&msg).Error
+}
+
+func (d *Database) UpdateMessagePosition(id string, pos request.MessagePosition, authorIP string, isAdmin bool) error {
+	query := d.DB.Model(&table.MessageTable{}).Where("id = ?", id)
+	if !isAdmin {
+		query = query.Where("author_ip = ?", authorIP)
+	}
+	return query.Updates(map[string]interface{}{
+		"x": pos.X,
+		"y": pos.Y,
+		"z": pos.Z,
+	}).Error
 }
 
 func (d *Database) AddViewCountMessage(id string) error {
