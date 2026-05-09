@@ -1,6 +1,6 @@
 .idea/
 .vscode/
-*.yaml
+config.yaml
 *.exe
 *.db
 data/

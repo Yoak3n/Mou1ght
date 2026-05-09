@@ -1,0 +1,50 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - certbot-webroot:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - client
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-webroot:/var/www/certbot
+      - certbot-certs:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done;'"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "10420"
+    volumes:
+      - mou1ght-data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./frontend/client
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - BASE_URL=http://backend:10420
+      - NEXT_PUBLIC_BASE_URL=http://backend:10420
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mou1ght-data:
+  certbot-webroot:
+  certbot-certs:

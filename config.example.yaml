@@ -1,0 +1,29 @@
+blog:
+    nav_bar:
+        links:
+            - type: internal
+              href: ""
+              label: home
+            - type: internal
+              href: ""
+              label: board
+        website_information:
+            title: Mou1ght
+            icon: ""
+            logo: ""
+            keywords:
+                - Mou1ght
+                - Blog
+    bottom_extra:
+        html: ""
+        css: ""
+    board:
+        question: ""
+        answer: ""
+        need_reviewed: false
+database:
+    dsn: Mou1ght
+    type: sqlite
+security:
+    jwt_key: ""
+    visitor_jwt_key: ""

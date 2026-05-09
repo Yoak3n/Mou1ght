@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "10420:10420"
+    volumes:
+      - mou1ght-data:/app/data
+      - ./config.yaml:/app/config.yaml
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./frontend/client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - BASE_URL=http://backend:10420
+      - NEXT_PUBLIC_BASE_URL=http://backend:10420
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mou1ght-data:
