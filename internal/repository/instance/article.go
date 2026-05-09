@@ -20,11 +20,13 @@ func (d *Database) UpdateArticle(article *table.ArticleTable) error {
 }
 
 func (d *Database) AddViewCountArticle(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("view", gorm.Expr("view + 1")).Error
+	d.BumpView("article", id, 1)
+	return nil
 }
 
 func (d *Database) AddLikeCountArticle(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("like", gorm.Expr("like + 1")).Error
+	d.BumpLike("article", id, 1)
+	return nil
 }
 
 func (d *Database) GetArticleByID(id string) (*table.ArticleTable, error) {

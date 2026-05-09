@@ -3,6 +3,7 @@ package entity
 import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
+	"Mou1ght/internal/repository/instance"
 )
 
 type MessageEntity struct {
@@ -22,6 +23,7 @@ type MessagePosition struct {
 
 func NewMessageEntityFromTable(msg *table.MessageTable) *MessageEntity {
 	length := util.MeasureArticleLength(msg.Content)
+	viewDelta, likeDelta := instance.UseDatabase().GetCounterDelta("message", msg.ID)
 	return &MessageEntity{
 		ID:      msg.ID,
 		Content: msg.Content,
@@ -31,8 +33,8 @@ func NewMessageEntityFromTable(msg *table.MessageTable) *MessageEntity {
 			Z: msg.Z,
 		},
 		State: PostState{
-			Like:   msg.Like,
-			View:   msg.View,
+			Like:   msg.Like + likeDelta,
+			View:   msg.View + viewDelta,
 			Length: length,
 			Status: StatusIntToString(msg.Status),
 		},

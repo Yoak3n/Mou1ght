@@ -56,3 +56,7 @@ func GenSharingID() string {
 func GenMessageID() string {
 	return "msg-" + nowSecondToString()[5:] + generateRandomString(6)
 }
+
+func GenVisitorID() string {
+	return "vis-" + nowSecondToString()[5:] + generateRandomString(10)
+}

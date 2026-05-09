@@ -22,6 +22,7 @@ func NewArticleEntityFromTable(article *table.ArticleTable, detail bool) *Articl
 	if err != nil {
 		return nil
 	}
+	viewDelta, likeDelta := instance.UseDatabase().GetCounterDelta("article", article.ID)
 	length := util.MeasureArticleLength(article.Content)
 	content := ""
 	if detail {
@@ -34,8 +35,8 @@ func NewArticleEntityFromTable(article *table.ArticleTable, detail bool) *Articl
 		Title:   article.Title,
 		Content: content,
 		State: PostState{
-			View:   article.View,
-			Like:   article.Like,
+			View:   article.View + viewDelta,
+			Like:   article.Like + likeDelta,
 			Length: length,
 			Status: StatusIntToString(article.Status),
 		},

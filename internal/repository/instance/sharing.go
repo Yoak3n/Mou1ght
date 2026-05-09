@@ -52,11 +52,13 @@ func (d *Database) UpdateSharing(sharing *table.SharingTable) error {
 }
 
 func (d *Database) AddViewCountSharing(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("view", gorm.Expr("view + 1")).Error
+	d.BumpView("sharing", id, 1)
+	return nil
 }
 
 func (d *Database) AddLikeCountSharing(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("like", gorm.Expr("like + 1")).Error
+	d.BumpLike("sharing", id, 1)
+	return nil
 }
 
 func (d *Database) GetSharingByID(id string) (*table.SharingTable, error) {

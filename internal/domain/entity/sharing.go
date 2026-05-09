@@ -23,15 +23,17 @@ func NewSharingEntityFromTable(sharing *table.SharingTable) *SharingEntity {
 	if err != nil {
 		return nil
 	}
+	viewDelta, likeDelta := instance.UseDatabase().GetCounterDelta("sharing", sharing.ID)
 	length := util.MeasureArticleLength(sharing.Content)
 	e := &SharingEntity{
 		ID:      sharing.ID,
 		Content: sharing.Content,
 		Author:  *NewUserEntityFromTable(user, false),
 		State: PostState{
-			Like:   sharing.Like,
-			View:   sharing.View,
+			Like:   sharing.Like + likeDelta,
+			View:   sharing.View + viewDelta,
 			Length: length,
+			Status: StatusIntToString(sharing.Status),
 		},
 		Time: PostTimeInfo{
 			CreatedAt: sharing.CreatedAt.Format("2006-01-02 15:04:05"),

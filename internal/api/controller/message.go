@@ -23,6 +23,11 @@ func CreateMessage(req *request.CreateMessageRequest) error {
 		Z:        req.Position.Z,
 		AuthorIP: req.AuthorIP,
 	}
+	if config.GetConfig().Blog.Board.NeedReviewed {
+		record.Status = 3
+	} else {
+		record.Status = 1
+	}
 	return instance.UseDatabase().CreateMessage(record)
 }
 
@@ -39,6 +44,8 @@ func UpdateMessage(req *request.UpdateMessageRequest) error {
 	}
 	if config.GetConfig().Blog.Board.NeedReviewed {
 		record.Status = 3
+	} else {
+		record.Status = 1
 	}
 	return instance.UseDatabase().UpdateMessage(record)
 }

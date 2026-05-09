@@ -29,11 +29,13 @@ func (d *Database) UpdateMessagePosition(id string, pos request.MessagePosition,
 }
 
 func (d *Database) AddViewCountMessage(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("view", gorm.Expr("view + 1")).Error
+	d.BumpView("message", id, 1)
+	return nil
 }
 
 func (d *Database) AddLikeCountMessage(id string) error {
-	return d.DB.Where("id = ? AND status = 1", id).Update("like", gorm.Expr("like + 1")).Error
+	d.BumpLike("message", id, 1)
+	return nil
 }
 
 func (d *Database) GetMessageByID(id string) (*table.MessageTable, error) {
