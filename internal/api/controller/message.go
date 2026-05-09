@@ -98,3 +98,7 @@ func ListMessages(dateRange *request.PostFilterDate, sort string) ([]*entity.Mes
 	mes := entity.NewMessagesEntityFromTables(msgs)
 	return mes, nil
 }
+
+func GetOwnedMessageIDs(jti string) ([]string, error) {
+	return instance.UseDatabase().GetOwnedMessageIDs(jti)
+}

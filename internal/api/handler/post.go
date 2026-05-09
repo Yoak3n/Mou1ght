@@ -5,7 +5,6 @@ import (
 	"Mou1ght/internal/domain/entity"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/pkg/util"
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -180,7 +179,6 @@ func ViewPost(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
 	typ := c.Query("type", "article")
-	log.Printf("ViewPost %s %s\n", typ, id)
 	switch typ {
 	case "article":
 		err := controller.ViewArticle(id)

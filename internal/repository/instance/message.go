@@ -70,3 +70,9 @@ func (d *Database) GetMessages(startDate, endDate *time.Time) ([]*table.MessageT
 	}
 	return msgs, nil
 }
+
+func (d *Database) GetOwnedMessageIDs(authorIP string) ([]string, error) {
+	var ids []string
+	err := d.DB.Model(&table.MessageTable{}).Where("author_ip = ?", authorIP).Pluck("id", &ids).Error
+	return ids, err
+}

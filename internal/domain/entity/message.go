@@ -12,7 +12,7 @@ type MessageEntity struct {
 	Position MessagePosition `json:"position"`
 	State    PostState       `json:"state"`
 	Time     PostTimeInfo    `json:"time"`
-	AuthorIP string          `json:"author_ip"`
+	AuthorIP string          `json:"-"`
 }
 
 type MessagePosition struct {

@@ -12,6 +12,7 @@ import (
 type Configuration struct {
 	Blog     console.BlogSetting `yaml:"blog"`
 	Database DatabaseSetting     `yaml:"database"`
+	Security SecuritySetting     `yaml:"security"`
 }
 
 var config *Configuration
@@ -21,6 +22,10 @@ func (c *Configuration) ToMap() map[string]any {
 	return map[string]any{
 		"blog": c.Blog.ToMap(),
 	}
+}
+
+func (c *Configuration) GetSecurity() SecuritySetting {
+	return c.Security
 }
 
 func ReadConfig() *Configuration {
@@ -42,12 +47,14 @@ func DefaultConfig() *Configuration {
 	return &Configuration{
 		Blog:     console.DefaultBlogSetting(),
 		Database: DefaultDatabaseSetting(),
+		Security: DefaultSecuritySetting(),
 	}
 }
 
 func createDefaultConfInFile() {
 	viper.Set("blog", console.DefaultBlogSetting())
 	viper.Set("database", DefaultDatabaseSetting())
+	viper.Set("security", DefaultSecuritySetting())
 	err := viper.SafeWriteConfig()
 	if err != nil {
 		panic(err)
@@ -72,6 +79,7 @@ func UpdateConfig(c *Configuration) {
 	config = c
 	viper.Set("blog", c.Blog)
 	viper.Set("database", c.Database)
+	viper.Set("security", c.Security)
 	err := viper.WriteConfig()
 	if err != nil {
 		log.Printf("Failed to update config: %v", err)

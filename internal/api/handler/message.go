@@ -10,6 +10,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func parseVisitorJTI(authorIP string) (string, error) {
+	token, claims, perr := util.ParseVisitorToken(authorIP)
+	if perr != nil || token == nil || !token.Valid {
+		return "", fiber.ErrForbidden
+	}
+	return claims.ID, nil
+}
+
 func CreateMessage(c *fiber.Ctx) error {
 	req := &request.CreateMessageRequest{}
 	err := c.BodyParser(req)
@@ -17,20 +25,13 @@ func CreateMessage(c *fiber.Ctx) error {
 		log.Printf("CreateMessage BodyParser error: %v\n", err)
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	log.Printf("CreateMessage ip=%s ua_len=%d content_len=%d pos=(%d,%d,%d) author_ip_len=%d\n",
-		c.IP(),
-		len(c.Get("User-Agent")),
-		len(req.Content),
-		req.Position.X, req.Position.Y, req.Position.Z,
-		len(req.AuthorIP),
-	)
 
-	token, claims, perr := util.ParseVisitorToken(req.AuthorIP)
-	if perr != nil || token == nil || !token.Valid {
-		log.Printf("CreateMessage invalid visitor token: err=%v valid=%v\n", perr, token != nil && token.Valid)
+	jti, err := parseVisitorJTI(req.AuthorIP)
+	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	log.Printf("CreateMessage visitor token ok: jti=%s claim_ip=%s claim_ua_len=%d\n", claims.ID, claims.IP, len(claims.UA))
+	req.AuthorIP = jti
+
 	err = controller.CreateMessage(req)
 	if err != nil {
 		log.Printf("CreateMessage controller error: %v\n", err)
@@ -71,6 +72,13 @@ func UpdateMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
+
+	jti, err := parseVisitorJTI(req.AuthorIP)
+	if err != nil {
+		return util.ErrorResponse(c, 403, "Invalid visitor token")
+	}
+	req.AuthorIP = jti
+
 	err = controller.UpdateMessage(req)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
@@ -82,32 +90,14 @@ func UpdateMessagePosition(c *fiber.Ctx) error {
 	req := &request.UpdateMessagePositionRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
-		log.Printf("UpdateMessagePosition BodyParser error: %v\n", err)
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	log.Printf("UpdateMessagePosition ip=%s msg_id=%s pos=(%d,%d,%d) author_ip_len=%d\n",
-		c.IP(),
-		req.ID,
-		req.Position.X, req.Position.Y, req.Position.Z,
-		len(req.AuthorIP),
-	)
-	token, claims, perr := util.ParseVisitorToken(req.AuthorIP)
-	if perr != nil || token == nil || !token.Valid {
-		log.Printf("UpdateMessagePosition invalid visitor token: err=%v valid=%v\n", perr, token != nil && token.Valid)
+
+	jti, err := parseVisitorJTI(req.AuthorIP)
+	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	log.Printf("UpdateMessagePosition visitor token ok: jti=%s claim_ip=%s\n", claims.ID, claims.IP)
-	// Check for admin/user token to allow bypass of IP check
-	// isAdmin := false
-	// headers := c.GetReqHeaders()
-	// tokenHeader, ok := headers["Authorization"]
-	// if ok && len(tokenHeader) > 0 && len(tokenHeader[0]) > 7 {
-	// 	tokenString := tokenHeader[0][7:]
-	// 	token, _, err := util.ParseToken(tokenString)
-	// 	if err == nil && token.Valid {
-	// 		isAdmin = true
-	// 	}
-	// }
+	req.AuthorIP = jti
 
 	err = controller.UpdateMessagePosition(req, false)
 	if err != nil {
@@ -200,4 +190,20 @@ func LikeMessage(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil)
+}
+
+func OwnedMessageIDs(c *fiber.Ctx) error {
+	token := c.Query("token", "")
+	if token == "" {
+		return util.ErrorResponse(c, 400, "token is required")
+	}
+	jti, err := parseVisitorJTI(token)
+	if err != nil {
+		return util.ErrorResponse(c, 403, "Invalid visitor token")
+	}
+	ids, err := controller.GetOwnedMessageIDs(jti)
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, fiber.Map{"ids": ids})
 }

@@ -2,10 +2,28 @@ package router
 
 import (
 	"Mou1ght/consts"
+	"embed"
+	"io/fs"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 )
+
+//go:embed all:adminui/*
+var adminEmbedded embed.FS
+
+func adminUIFS() fs.FS {
+	if sub, err := fs.Sub(adminEmbedded, "adminui/dist"); err == nil {
+		return sub
+	}
+	sub, err := fs.Sub(adminEmbedded, "adminui")
+	if err != nil {
+		panic(err)
+	}
+	return sub
+}
 
 func InitRouter() *fiber.App {
 	r := fiber.New()
@@ -18,6 +36,10 @@ func setupRouter(r *fiber.App) {
 	r.Static("/upload", consts.Upload, fiber.Static{
 		// Download: true,
 	})
+	r.Use("/admin", filesystem.New(filesystem.Config{
+		Root:         http.FS(adminUIFS()),
+		NotFoundFile: "index.html",
+	}))
 	setupApiRouter(r)
 }
 

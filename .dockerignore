@@ -1,0 +1,10 @@
+frontend/client/node_modules
+frontend/client/.next
+frontend/admin/node_modules
+frontend/admin/dist
+.git
+.gitignore
+.gitmodules
+data/
+*.db
+docs/

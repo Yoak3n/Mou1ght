@@ -1,15 +1,59 @@
 package util
 
 import (
+	"Mou1ght/internal/config"
 	"crypto/rand"
 	"encoding/hex"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var sampleJwtKey = []byte("sampleJwtKey")
-var visitorJwtKey = []byte("sampleVisitorJwtKey")
+var (
+	sampleJwtKey  []byte
+	visitorJwtKey []byte
+	keyOnce       sync.Once
+)
+
+const (
+	defaultJwtKey        = "sampleJwtKey"
+	defaultVisitorJwtKey = "sampleVisitorJwtKey"
+	envJwtKey            = "JWT_KEY"
+	envVisitorJwtKey     = "VISITOR_JWT_KEY"
+)
+
+func initKeys() {
+	keyOnce.Do(func() {
+		sampleJwtKey = resolveKey(envJwtKey, defaultJwtKey, true)
+		visitorJwtKey = resolveKey(envVisitorJwtKey, defaultVisitorJwtKey, false)
+	})
+}
+
+func resolveKey(envKey string, fallback string, isPrimary bool) []byte {
+	cfg := config.GetConfig().GetSecurity()
+	if isPrimary && cfg.JwtKey != "" {
+		return []byte(cfg.JwtKey)
+	}
+	if !isPrimary && cfg.VisitorJwtKey != "" {
+		return []byte(cfg.VisitorJwtKey)
+	}
+	if v := os.Getenv(envKey); v != "" {
+		return []byte(v)
+	}
+	return []byte(fallback)
+}
+
+func GetSampleJwtKey() []byte {
+	initKeys()
+	return sampleJwtKey
+}
+
+func GetVisitorJwtKey() []byte {
+	initKeys()
+	return visitorJwtKey
+}
 
 type Claims struct {
 	UID uint
@@ -34,7 +78,7 @@ func ReleaseToken(userID string) (string, error) {
 		MapClaims: mapClaims,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(sampleJwtKey)
+	tokenString, err := token.SignedString(GetSampleJwtKey())
 	if err != nil {
 		return "", err
 	}
@@ -43,9 +87,8 @@ func ReleaseToken(userID string) (string, error) {
 
 func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 	claims := &Claims{}
-	// 复杂的捏
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return sampleJwtKey, err
+		return GetSampleJwtKey(), err
 	})
 	return token, claims, err
 }
@@ -53,7 +96,7 @@ func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 func ClearToken(tokenString string) error {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return sampleJwtKey, err
+		return GetSampleJwtKey(), err
 	})
 	token.Valid = false
 	return err
@@ -81,13 +124,13 @@ func ReleaseVisitorToken(ip string, ua string) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(visitorJwtKey)
+	return token.SignedString(GetVisitorJwtKey())
 }
 
 func ParseVisitorToken(tokenString string) (*jwt.Token, *VisitorClaims, error) {
 	claims := &VisitorClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return visitorJwtKey, err
+		return GetVisitorJwtKey(), err
 	})
 	return token, claims, err
 }
