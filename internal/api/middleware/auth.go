@@ -20,8 +20,8 @@ func Auth(c *fiber.Ctx) error {
 		log.Println(err)
 		return util.ErrorResponse(c, 401, "Token invalid")
 	}
-	userId := claims.MapClaims["uid"].(string)
-	if userId == "" {
+	userId, ok := claims.MapClaims["uid"].(string)
+	if !ok || userId == "" {
 		return util.ErrorResponse(c, 403, "Unauthorized")
 	}
 	c.Locals("uid", userId)

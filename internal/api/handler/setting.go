@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"Mou1ght/internal/api/controller"
+	"Mou1ght/internal/api/service"
 	"Mou1ght/internal/domain/model/schema/console"
 	"Mou1ght/internal/pkg/util"
 
@@ -9,7 +9,7 @@ import (
 )
 
 func GetAllSetting(c *fiber.Ctx) error {
-	setting, err := controller.GetAllSetting()
+	setting, err := service.GetAllSetting()
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
@@ -17,7 +17,7 @@ func GetAllSetting(c *fiber.Ctx) error {
 }
 
 func GetBlogSetting(c *fiber.Ctx) error {
-	setting, err := controller.GetBlogSetting()
+	setting, err := service.GetBlogSetting()
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
@@ -29,7 +29,7 @@ func UpdateBlogSetting(c *fiber.Ctx) error {
 	if err := c.BodyParser(setting); err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	if err := controller.UpdateBlogSetting(*setting); err != nil {
+	if err := service.UpdateBlogSetting(*setting); err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil)

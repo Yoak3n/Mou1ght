@@ -46,19 +46,4 @@ type UserWithPostEntity struct {
 	Articles []ArticleEntity `json:"articles"`
 }
 
-func NewUserWithPostEntityFromTable(author *table.UserTable, sharings []table.SharingTable, articles []table.ArticleTable) *UserWithPostEntity {
-	sharing := make([]SharingEntity, 0)
-	for _, s := range sharings {
-		sharing = append(sharing, *NewSharingEntityFromTable(&s))
-	}
-	article := make([]ArticleEntity, 0)
-	for _, a := range articles {
-		article = append(article, *NewArticleEntityFromTable(&a, false))
-	}
 
-	return &UserWithPostEntity{
-		Author:   NewUserEntityFromTable(author, false),
-		Sharings: sharing,
-		Articles: article,
-	}
-}

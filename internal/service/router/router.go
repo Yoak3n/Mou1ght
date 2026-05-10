@@ -2,6 +2,7 @@ package router
 
 import (
 	"Mou1ght/consts"
+	"Mou1ght/internal/api/handler"
 	"embed"
 	"io/fs"
 	"net/http"
@@ -25,14 +26,24 @@ func adminUIFS() fs.FS {
 	return sub
 }
 
-func InitRouter() *fiber.App {
+type Deps struct {
+	UserHandler     *handler.UserHandler
+	ArticleHandler  *handler.ArticleHandler
+	SharingHandler  *handler.SharingHandler
+	MessageHandler  *handler.MessageHandler
+	TagHandler      *handler.TagHandler
+	CategoryHandler *handler.CategoryHandler
+	PostHandler     *handler.PostHandler
+}
+
+func InitRouter(deps Deps) *fiber.App {
 	r := fiber.New()
 	r.Use(cors.New())
-	setupRouter(r)
+	setupRouter(r, &deps)
 	return r
 }
 
-func setupRouter(r *fiber.App) {
+func setupRouter(r *fiber.App, deps *Deps) {
 	r.Static("/upload", consts.Upload, fiber.Static{
 		// Download: true,
 	})
@@ -40,17 +51,17 @@ func setupRouter(r *fiber.App) {
 		Root:         http.FS(adminUIFS()),
 		NotFoundFile: "index.html",
 	}))
-	setupApiRouter(r)
+	setupApiRouter(r, deps)
 }
 
-func setupApiRouter(r *fiber.App) {
+func setupApiRouter(r *fiber.App, deps *Deps) {
 	v1 := r.Group("/api/v1")
 	setupAttachmentRouter(v1)
-	setupUserRouter(v1)
+	setupUserRouter(v1, deps.UserHandler)
 	setupSettingRouter(v1)
-	setupArticleRouter(v1)
-	setupSharingRouter(v1)
-	setupMessageRouter(v1)
-	setupTagRouter(v1)
-	setupCategoryRouter(v1)
+	setupArticleRouter(v1, deps.ArticleHandler, deps.PostHandler)
+	setupSharingRouter(v1, deps.SharingHandler, deps.PostHandler)
+	setupMessageRouter(v1, deps.MessageHandler, deps.PostHandler)
+	setupTagRouter(v1, deps.TagHandler)
+	setupCategoryRouter(v1, deps.CategoryHandler)
 }

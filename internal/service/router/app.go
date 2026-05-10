@@ -7,12 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func setupUserRouter(r fiber.Router) {
+func setupUserRouter(r fiber.Router, userHandler *handler.UserHandler) {
 	user := r.Group("/user")
-	user.Post("/register", handler.Register)
-	user.Post("/login", handler.Login)
-	user.Use(middleware.Auth).Get("/info", handler.Info)
-	user.Use(middleware.Auth).Post("/logout", handler.Logout)
+	user.Post("/register", userHandler.Register)
+	user.Post("/login", userHandler.Login)
+	user.Use(middleware.Auth).Get("/info", userHandler.Info)
+	user.Use(middleware.Auth).Post("/logout", userHandler.Logout)
 }
 
 func setupSettingRouter(r fiber.Router) {

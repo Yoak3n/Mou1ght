@@ -3,50 +3,66 @@ package instance
 import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
+
 	"maps"
+
+	"gorm.io/gorm"
 )
 
-const (
-	ArticleTag TagType = 1
-	SharingTag TagType = 2
-)
-
-type TagType = int
-
-func (d *Database) CreateTag(tag *table.TagTable) error {
-	return d.DB.Create(tag).Error
+type TagRepository struct {
+	db *gorm.DB
 }
 
-func (d *Database) GetAllTags() ([]table.TagTable, error) {
+func NewTagRepository(db *gorm.DB) *TagRepository {
+	return &TagRepository{db: db}
+}
+
+// CreateTag 创建标签
+func (t *TagRepository) CreateTag(tag *table.TagTable) error {
+	return t.db.Create(tag).Error
+}
+
+// DeleteTag 删除标签
+func (t *TagRepository) DeleteTag(tagID string) error {
+	return t.db.Delete(&table.TagTable{ID: tagID}).Error
+}
+
+// GetAllTags 获取所有标签
+func (t *TagRepository) GetAllTags() ([]table.TagTable, error) {
 	tags := make([]table.TagTable, 0)
-	err := d.DB.Find(&tags).Error
+	err := t.db.Find(&tags).Error
 	return tags, err
 }
 
-func (d *Database) GetTagByID(id string) (*table.TagTable, error) {
+// GetTagByID 根据标签ID获取标签
+func (t *TagRepository) GetTagByID(id string) (*table.TagTable, error) {
 	tag := &table.TagTable{}
-	err := d.DB.Where("id = ?", id).First(tag).Error
+	err := t.db.Where("id = ?", id).First(tag).Error
 	return tag, err
 }
 
-func (d *Database) GetTagsByID(ids []string) ([]table.TagTable, error) {
+// GetTagsByID 根据标签ID列表获取标签
+func (t *TagRepository) GetTagsByID(ids []string) ([]table.TagTable, error) {
 	tags := make([]table.TagTable, 0)
-	err := d.DB.Where("id IN ?", ids).Find(&tags).Error
+	err := t.db.Where("id IN ?", ids).Find(&tags).Error
 	return tags, err
 }
 
-func (d *Database) UpdateTag(tag *table.TagTable) error {
-	return d.DB.Save(tag).Error
+// UpdateTag 更新标签
+func (t *TagRepository) UpdateTag(tag *table.TagTable) error {
+	return t.db.Save(tag).Error
 }
 
-func (d *Database) UpdateTargetLinks(targetID string, targetType TagType, ids map[string]bool) error {
+// UpdateTargetLinks 更新目标的标签链接
+// ids 中为 true 的标签会被添加，为 false 的标签会被删除
+func (t *TagRepository) UpdateTargetLinks(targetID string, targetType table.TagType, ids map[string]bool) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	currentIDs := make([]string, 0)
 	unhandledIDs := make(map[string]bool)
 	maps.Copy(unhandledIDs, ids)
-	err := d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &currentIDs).Error
+	err := t.db.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &currentIDs).Error
 	if err != nil {
 		return err
 	}
@@ -54,7 +70,7 @@ func (d *Database) UpdateTargetLinks(targetID string, targetType TagType, ids ma
 	for _, currentID := range currentIDs {
 		unhandledIDs[currentID] = false
 		if _, ok := ids[currentID]; !ok {
-			lastError = d.DeleteTagLinkByTagID(currentID)
+			lastError = t.DeleteTagLinkByTagID(currentID)
 			if lastError != nil {
 				continue
 			}
@@ -68,7 +84,7 @@ func (d *Database) UpdateTargetLinks(targetID string, targetType TagType, ids ma
 				TagID:      k,
 				ID:         util.GenTagLinkID(),
 			}
-			lastError = d.CreateTagLink(link)
+			lastError = t.CreateTagLink(link)
 			if lastError != nil {
 				continue
 			}
@@ -77,49 +93,57 @@ func (d *Database) UpdateTargetLinks(targetID string, targetType TagType, ids ma
 	return lastError
 }
 
-func (d *Database) DeleteTagWithLink(tagID string) error {
-	err := d.DB.Where("id = ?", tagID).Delete(&table.TagTable{}).Error
+// DeleteTagWithLink 删除标签及其关联的标签链接
+func (t *TagRepository) DeleteTagWithLink(tagID string) error {
+	err := t.db.Where("id = ?", tagID).Delete(&table.TagTable{}).Error
 	if err != nil {
 		return err
 	}
-	return d.DB.Where("tag_id = ? ", tagID).Delete(&table.TagLinkTable{}).Error
+	return t.db.Where("tag_id = ? ", tagID).Delete(&table.TagLinkTable{}).Error
 }
 
-func (d *Database) CreateTagLink(tagLink *table.TagLinkTable) error {
-	return d.DB.Create(tagLink).Error
+// CreateTagLink 创建标签链接
+func (t *TagRepository) CreateTagLink(tagLink *table.TagLinkTable) error {
+	return t.db.Create(tagLink).Error
 }
 
-func (d *Database) QueryTagsByLabel(label []string) ([]table.TagTable, error) {
+// QueryTagsByLabel 根据标签标签列表查询标签
+func (t *TagRepository) QueryTagsByLabel(label []string) ([]table.TagTable, error) {
 	tags := make([]table.TagTable, 0)
-	err := d.DB.Where("label IN ?", label).Find(&tags).Error
+	err := t.db.Where("label IN ?", label).Find(&tags).Error
 	return tags, err
 }
 
-func (d *Database) QueryTagsByID(targetID string, targetType TagType) ([]table.TagTable, error) {
+// QueryTagsByID 根据目标ID和目标类型查询标签
+func (t *TagRepository) QueryTagsByID(targetID string, targetType table.TagType) ([]table.TagTable, error) {
 	ids := make([]string, 0)
-	err := d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &ids).Error
+	err := t.db.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &ids).Error
 	if err != nil {
 		return nil, err
 	}
-	return d.GetTagsByID(ids)
+	return t.GetTagsByID(ids)
 }
 
-func (d *Database) DeleteTagLink(linkID string) error {
-	return d.DB.Where("id = ?", linkID).Delete(&table.TagLinkTable{}).Error
+// DeleteTagLink 删除标签链接
+func (t *TagRepository) DeleteTagLink(linkID string) error {
+	return t.db.Where("id = ?", linkID).Delete(&table.TagLinkTable{}).Error
 }
 
-func (d *Database) DeleteTagLinkByTagID(tagID string) error {
-	return d.DB.Where("tag_id = ?", tagID).Delete(&table.TagLinkTable{}).Error
+// DeleteTagLinkByTagID 删除标签关联的标签链接
+func (t *TagRepository) DeleteTagLinkByTagID(tagID string) error {
+	return t.db.Where("tag_id = ?", tagID).Delete(&table.TagLinkTable{}).Error
 }
 
-func (d *Database) DeleteTagLinkFromTarget(targetID string, targetType TagType) error {
-	return d.DB.Where("target_id = ? AND target_type = ?", targetID, targetType).Delete(&table.TagLinkTable{}).Error
+// DeleteTagLinkFromTarget 删除目标关联的标签链接
+func (t *TagRepository) DeleteTagLinkFromTarget(targetID string, targetType table.TagType) error {
+	return t.db.Where("target_id = ? AND target_type = ?", targetID, targetType).Delete(&table.TagLinkTable{}).Error
 }
 
-func (d *Database) GetTagLinkByKeyword(keyword []string, typ string) (map[string]table.TagTable, []table.TagLinkTable, error) {
+// GetTagLinkByKeyword 根据标签标签列表查询标签链接
+func (t *TagRepository) GetTagLinkByKeyword(keyword []string, typ string) (map[string]table.TagTable, []table.TagLinkTable, error) {
 	tags := make([]table.TagTable, 0)
 
-	err := d.DB.Where("label IN ?", keyword).Find(&tags).Error
+	err := t.db.Where("label IN ?", keyword).Find(&tags).Error
 	if err != nil {
 		return nil, nil, err
 	}
@@ -130,20 +154,21 @@ func (d *Database) GetTagLinkByKeyword(keyword []string, typ string) (map[string
 		tagsIds[i] = tag.ID
 	}
 	links := make([]table.TagLinkTable, 0)
-	t := 1
+	tType := 1
 	if typ == "sharing" {
-		t = 2
+		tType = 2
 	}
-	err = d.DB.Where("tag_id IN ? AND target_type = ?", tagsIds, t).Find(&links).Error
+	err = t.db.Where("tag_id IN ? AND target_type = ?", tagsIds, tType).Find(&links).Error
 	if err != nil {
 		return nil, nil, err
 	}
 	return tagsMap, links, nil
 }
 
-func (d *Database) GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) ([]table.ArticleTable, error) {
+// GetArticlesFromTagLink 根据标签链接查询文章
+func (t *TagRepository) GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) ([]table.ArticleTable, error) {
 	articles := make([]table.ArticleTable, 0)
-	query := d.DB.Model(&table.ArticleTable{}).Where("id = ?", link.TargetID)
+	query := t.db.Model(&table.ArticleTable{}).Where("id = ?", link.TargetID)
 	if desc {
 		query = query.Order("created_at DESC")
 	} else {
@@ -156,9 +181,10 @@ func (d *Database) GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) (
 	return articles, nil
 }
 
-func (d *Database) GetSharingFromTagLink(link *table.TagLinkTable, desc bool) ([]table.SharingTable, error) {
+// GetSharingFromTagLink 根据标签链接查询分享
+func (t *TagRepository) GetSharingFromTagLink(link *table.TagLinkTable, desc bool) ([]table.SharingTable, error) {
 	sharings := make([]table.SharingTable, 0)
-	query := d.DB.Model(&table.SharingTable{}).Where("id = ?", link.TargetID)
+	query := t.db.Model(&table.SharingTable{}).Where("id = ?", link.TargetID)
 	if desc {
 		query = query.Order("created_at DESC")
 	} else {
@@ -169,4 +195,21 @@ func (d *Database) GetSharingFromTagLink(link *table.TagLinkTable, desc bool) ([
 		return nil, err
 	}
 	return sharings, nil
+}
+
+func (t *TagRepository) CreateTagsLinkToArticle(tags []string, articleID string) error {
+	for _, tag := range tags {
+		lid := util.GenTagLinkID()
+		record := &table.TagLinkTable{
+			ID:         lid,
+			TargetID:   articleID,
+			TargetType: 1,
+			TagID:      tag,
+		}
+		err := t.CreateTagLink(record)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

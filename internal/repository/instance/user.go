@@ -1,35 +1,47 @@
 package instance
 
-import "Mou1ght/internal/domain/model/table"
+import (
+	"Mou1ght/internal/domain/model/table"
 
-func (d *Database) CreateUser(user *table.UserTable) error {
-	return d.DB.Create(user).Error
+	"gorm.io/gorm"
+)
+
+type UserRepository struct {
+	db *gorm.DB
 }
 
-func (d *Database) GetUser(id string) (*table.UserTable, error) {
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
+
+func (d *UserRepository) CreateUser(user *table.UserTable) error {
+	return d.db.Create(user).Error
+}
+
+func (d *UserRepository) GetUser(id string) (*table.UserTable, error) {
 	user := &table.UserTable{}
-	err := d.DB.First(user).Where("id = ?", id).Error
+	err := d.db.Where("id = ?", id).First(user).Error
 	return user, err
 }
 
-func (d *Database) GetUserByName(name string) (*table.UserTable, error) {
+func (d *UserRepository) GetUserByName(name string) (*table.UserTable, error) {
 	user := &table.UserTable{}
-	err := d.DB.First(user).Where("user_name = ?", name).Error
+	err := d.db.Where("user_name = ?", name).First(user).Error
 	return user, err
 }
 
-func (d *Database) QueryUsers(username []string) ([]table.UserTable, error) {
+func (d *UserRepository) QueryUsers(username []string) ([]table.UserTable, error) {
 	users := make([]table.UserTable, 0)
-	err := d.DB.Find(&users).Where("user_name IN ?", username).Error
+	err := d.db.Where("user_name IN ?", username).Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (d *Database) UpdateUser(user *table.UserTable) error {
-	return d.DB.Save(user).Error
+func (d *UserRepository) UpdateUser(user *table.UserTable) error {
+	return d.db.Save(user).Error
 }
-func (d *Database) DeleteUser(user *table.UserTable) error {
-	return d.DB.Delete(user).Error
+func (d *UserRepository) DeleteUser(user *table.UserTable) error {
+	return d.db.Delete(user).Error
 }

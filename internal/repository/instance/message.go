@@ -3,21 +3,31 @@ package instance
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/repository/interfaces"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-func (d *Database) CreateMessage(msg *table.MessageTable) error {
-	return d.DB.Create(&msg).Error
+type MessageRepository struct {
+	db      *gorm.DB
+	counter interfaces.PostCounter
 }
 
-func (d *Database) UpdateMessage(msg *table.MessageTable) error {
-	return d.DB.Save(&msg).Error
+func NewMessageRepository(db *gorm.DB, counter interfaces.PostCounter) *MessageRepository {
+	return &MessageRepository{db: db, counter: counter}
 }
 
-func (d *Database) UpdateMessagePosition(id string, pos request.MessagePosition, authorIP string, isAdmin bool) error {
-	query := d.DB.Model(&table.MessageTable{}).Where("id = ?", id)
+func (m *MessageRepository) CreateMessage(msg *table.MessageTable) error {
+	return m.db.Create(&msg).Error
+}
+
+func (m *MessageRepository) UpdateMessage(msg *table.MessageTable) error {
+	return m.db.Save(&msg).Error
+}
+
+func (m *MessageRepository) UpdateMessagePosition(id string, pos request.MessagePosition, authorIP string, isAdmin bool) error {
+	query := m.db.Model(&table.MessageTable{}).Where("id = ?", id)
 	if !isAdmin {
 		query = query.Where("author_ip = ?", authorIP)
 	}
@@ -28,40 +38,40 @@ func (d *Database) UpdateMessagePosition(id string, pos request.MessagePosition,
 	}).Error
 }
 
-func (d *Database) AddViewCountMessage(id string) error {
-	d.BumpView("message", id, 1)
+func (m *MessageRepository) AddViewCountMessage(id string) error {
+	m.counter.BumpView("message", id, 1)
 	return nil
 }
 
-func (d *Database) AddLikeCountMessage(id string) error {
-	d.BumpLike("message", id, 1)
+func (m *MessageRepository) AddLikeCountMessage(id string) error {
+	m.counter.BumpLike("message", id, 1)
 	return nil
 }
 
-func (d *Database) GetMessageByID(id string) (*table.MessageTable, error) {
+func (m *MessageRepository) GetMessageByID(id string) (*table.MessageTable, error) {
 	msg := &table.MessageTable{}
-	err := d.DB.Where("id = ?", id).First(&msg).Error
+	err := m.db.Where("id = ?", id).First(&msg).Error
 	return msg, err
 }
 
-func (d *Database) DeleteMessageByID(id string) error {
-	return d.DB.Where("id = ?", id).Delete(&table.MessageTable{}).Error
+func (m *MessageRepository) DeleteMessageByID(id string) error {
+	return m.db.Where("id = ?", id).Delete(&table.MessageTable{}).Error
 }
 
-func (d *Database) GetMessages(startDate, endDate *time.Time) ([]*table.MessageTable, error) {
+func (m *MessageRepository) GetMessages(startDate, endDate *time.Time) ([]*table.MessageTable, error) {
 	msgs := make([]*table.MessageTable, 0)
 	var query *gorm.DB
 	if startDate != nil {
 		if endDate == nil {
-			query = d.DB.Where("created_at >= ?", startDate)
+			query = m.db.Where("created_at >= ?", startDate)
 		} else {
-			query = d.DB.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+			query = m.db.Where("created_at BETWEEN ? AND ?", startDate, endDate)
 		}
 	} else {
 		if endDate == nil {
-			query = d.DB
+			query = m.db
 		} else {
-			query = d.DB.Where("created_at <= ?", endDate)
+			query = m.db.Where("created_at <= ?", endDate)
 		}
 	}
 	err := query.Order("created_at DESC").Find(&msgs).Error
@@ -71,8 +81,8 @@ func (d *Database) GetMessages(startDate, endDate *time.Time) ([]*table.MessageT
 	return msgs, nil
 }
 
-func (d *Database) GetOwnedMessageIDs(authorIP string) ([]string, error) {
+func (m *MessageRepository) GetOwnedMessageIDs(authorIP string) ([]string, error) {
 	var ids []string
-	err := d.DB.Model(&table.MessageTable{}).Where("author_ip = ?", authorIP).Pluck("id", &ids).Error
+	err := m.db.Model(&table.MessageTable{}).Where("author_ip = ?", authorIP).Pluck("id", &ids).Error
 	return ids, err
 }

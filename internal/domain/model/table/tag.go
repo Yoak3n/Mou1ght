@@ -6,6 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ArticleTag TagType = 1
+	SharingTag TagType = 2
+)
+
+type TagType = int
+
 type TagTable struct {
 	ID        string `gorm:"primary_key;not null;"`
 	Label     string `gorm:"unique;not null;"`

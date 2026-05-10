@@ -1,4 +1,4 @@
-package controller
+package service
 
 import (
 	"Mou1ght/consts"

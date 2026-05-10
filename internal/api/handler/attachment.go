@@ -2,7 +2,7 @@ package handler
 
 import (
 	"Mou1ght/consts"
-	"Mou1ght/internal/api/controller"
+	"Mou1ght/internal/api/service"
 	"Mou1ght/internal/pkg/util"
 	util2 "Mou1ght/pkg/util"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 func GetAttachmentList(c *fiber.Ctx) error {
-	attachmentList := controller.GetAttachmentList()
+	attachmentList := service.GetAttachmentList()
 	return util.SuccessResponse(c, attachmentList)
 }
 

@@ -2,38 +2,51 @@ package instance
 
 import (
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/repository/interfaces"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-func (d *Database) GetSharingsByAuthorID(authorID string, desc bool) ([]table.SharingTable, error) {
+type SharingRepository struct {
+	db      *gorm.DB
+	counter interfaces.PostCounter
+}
+
+func NewSharingRepository(db *gorm.DB, counter interfaces.PostCounter) *SharingRepository {
+	return &SharingRepository{
+		db:      db,
+		counter: counter,
+	}
+}
+
+func (s *SharingRepository) GetSharingsByAuthorID(authorID string, desc bool) ([]table.SharingTable, error) {
 	sharings := make([]table.SharingTable, 0)
 	order := "created_at ASC"
 	if desc {
 		order = "created_at DESC"
 	}
-	err := d.DB.Where("author_id = ?", authorID).Order(order).Find(&sharings).Error
+	err := s.db.Where("author_id = ?", authorID).Order(order).Find(&sharings).Error
 	if err != nil {
 		return nil, err
 	}
 	return sharings, nil
 }
 
-func (d *Database) GetSharings(startDate, endDate *time.Time) ([]*table.SharingTable, error) {
+func (s *SharingRepository) GetSharings(startDate, endDate *time.Time) ([]*table.SharingTable, error) {
 	sharings := make([]*table.SharingTable, 0)
 	var query *gorm.DB
 	if startDate != nil {
 		if endDate == nil {
-			query = d.DB.Where("created_at >= ?", startDate)
+			query = s.db.Where("created_at >= ?", startDate)
 		} else {
-			query = d.DB.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+			query = s.db.Where("created_at BETWEEN ? AND ?", startDate, endDate)
 		}
 	} else {
 		if endDate == nil {
-			query = d.DB
+			query = s.db
 		} else {
-			query = d.DB.Where("created_at <= ?", endDate)
+			query = s.db.Where("created_at <= ?", endDate)
 		}
 	}
 	err := query.Order("created_at DESC").Find(&sharings).Error
@@ -43,30 +56,30 @@ func (d *Database) GetSharings(startDate, endDate *time.Time) ([]*table.SharingT
 	return sharings, nil
 }
 
-func (d *Database) CreateSharing(sharing *table.SharingTable) error {
-	return d.DB.Create(&sharing).Error
+func (s *SharingRepository) CreateSharing(sharing *table.SharingTable) error {
+	return s.db.Create(&sharing).Error
 }
 
-func (d *Database) UpdateSharing(sharing *table.SharingTable) error {
-	return d.DB.Save(&sharing).Error
+func (s *SharingRepository) UpdateSharing(sharing *table.SharingTable) error {
+	return s.db.Save(&sharing).Error
 }
 
-func (d *Database) AddViewCountSharing(id string) error {
-	d.BumpView("sharing", id, 1)
+func (s *SharingRepository) AddViewCountSharing(id string) error {
+	s.counter.BumpView("sharing", id, 1)
 	return nil
 }
 
-func (d *Database) AddLikeCountSharing(id string) error {
-	d.BumpLike("sharing", id, 1)
+func (s *SharingRepository) AddLikeCountSharing(id string) error {
+	s.counter.BumpLike("sharing", id, 1)
 	return nil
 }
 
-func (d *Database) GetSharingByID(id string) (*table.SharingTable, error) {
+func (s *SharingRepository) GetSharingByID(id string) (*table.SharingTable, error) {
 	sharing := &table.SharingTable{}
-	err := d.DB.Where("id = ?", id).First(&sharing).Error
+	err := s.db.Where("id = ?", id).First(&sharing).Error
 	return sharing, err
 }
 
-func (d *Database) DeleteSharingByID(id string) error {
-	return d.DB.Where("id = ?", id).Delete(&table.SharingTable{}).Error
+func (s *SharingRepository) DeleteSharingByID(id string) error {
+	return s.db.Where("id = ?", id).Delete(&table.SharingTable{}).Error
 }

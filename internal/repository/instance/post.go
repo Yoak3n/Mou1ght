@@ -1,13 +1,25 @@
 package instance
 
 import (
-	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/repository/interfaces"
 	"errors"
 
 	"gorm.io/gorm"
 )
 
-func (d *Database) UpdatePostStatus(postType string, id string, status int8) error {
+type PostRepository struct {
+	counter interfaces.PostCounter
+	db      *gorm.DB
+}
+
+func NewPostRepository(counter interfaces.PostCounter, db *gorm.DB) *PostRepository {
+	return &PostRepository{
+		counter: counter,
+		db:      db,
+	}
+}
+
+func (p *PostRepository) UpdatePostStatus(postType string, id string, status int8) error {
 	tableName := ""
 	switch postType {
 	case "article":
@@ -19,11 +31,11 @@ func (d *Database) UpdatePostStatus(postType string, id string, status int8) err
 	default:
 		return errors.New("invalid post type")
 	}
-	if status < 0 || status > 2  {
+	if status < 0 || status > 2 {
 		return errors.New("status must be 0, 1, or 2")
 	}
 
-	result := d.DB.Table(tableName).Where("id = ?", id).Update("status", status)
+	result := p.db.Table(tableName).Where("id = ?", id).Update("status", status)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -33,50 +45,33 @@ func (d *Database) UpdatePostStatus(postType string, id string, status int8) err
 	return nil
 }
 
-func (d *Database) applyCounterDelta(postType, id string, viewDelta, likeDelta int64) {
-	if viewDelta == 0 && likeDelta == 0 {
-		return
-	}
-
-	var model any
-	switch postType {
-	case "article":
-		model = &table.ArticleTable{}
-	case "sharing":
-		model = &table.SharingTable{}
-	case "message":
-		model = &table.MessageTable{}
-	default:
-		return
-	}
-
-	updates := make(map[string]any, 2)
-	if viewDelta != 0 {
-		updates["view"] = gorm.Expr("view + ?", viewDelta)
-	}
-	if likeDelta != 0 {
-		updates["like"] = gorm.Expr("like + ?", likeDelta)
-	}
-	_ = d.DB.Model(model).Where("id = ? AND status = 1", id).Updates(updates).Error
+type PostCounter struct {
+	counter *counterBuffer
 }
 
-func (d *Database) BumpView(postType, id string, n int64) {
-	if d.counter == nil {
-		return
+func NewPostCounter(counter *counterBuffer) *PostCounter {
+	return &PostCounter{
+		counter: counter,
 	}
-	d.counter.bumpView(postType, id, n)
 }
 
-func (d *Database) BumpLike(postType, id string, n int64) {
-	if d.counter == nil {
+func (p *PostCounter) BumpView(postType, id string, n int64) {
+	if p.counter == nil {
 		return
 	}
-	d.counter.bumpLike(postType, id, n)
+	p.counter.bumpView(postType, id, n)
 }
 
-func (d *Database) GetCounterDelta(postType, id string) (viewDelta int64, likeDelta int64) {
-	if d.counter == nil {
+func (p *PostCounter) BumpLike(postType, id string, n int64) {
+	if p.counter == nil {
+		return
+	}
+	p.counter.bumpLike(postType, id, n)
+}
+
+func (p *PostCounter) GetCounterDelta(postType, id string) (viewDelta int64, likeDelta int64) {
+	if p.counter == nil {
 		return 0, 0
 	}
-	return d.counter.get(postType, id)
+	return p.counter.get(postType, id)
 }

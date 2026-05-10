@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"Mou1ght/internal/api/controller"
+	"Mou1ght/internal/api/service"
 	"Mou1ght/internal/domain/entity"
 	"Mou1ght/internal/domain/model/schema/request"
+	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"log"
 
@@ -18,7 +19,16 @@ func parseVisitorJTI(authorIP string) (string, error) {
 	return claims.ID, nil
 }
 
-func CreateMessage(c *fiber.Ctx) error {
+type MessageHandler struct {
+	messageService *service.MessageService
+	dtoService     *service.DTOService
+}
+
+func NewMessageHandler(messageService *service.MessageService, dtoService *service.DTOService) *MessageHandler {
+	return &MessageHandler{messageService: messageService, dtoService: dtoService}
+}
+
+func (h *MessageHandler) CreateMessage(c *fiber.Ctx) error {
 	req := &request.CreateMessageRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
@@ -32,7 +42,7 @@ func CreateMessage(c *fiber.Ctx) error {
 	}
 	req.AuthorIP = jti
 
-	err = controller.CreateMessage(req)
+	err = h.messageService.CreateMessage(req)
 	if err != nil {
 		log.Printf("CreateMessage controller error: %v\n", err)
 		return util.ErrorResponse(c, 500, err.Error())
@@ -40,7 +50,7 @@ func CreateMessage(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, nil, "Create message successfully")
 }
 
-func VisitorID(c *fiber.Ctx) error {
+func (h *MessageHandler) VisitorID(c *fiber.Ctx) error {
 	ip := c.IP()
 	ua := c.Get("User-Agent")
 	id, err := util.ReleaseVisitorToken(ip, ua)
@@ -54,19 +64,19 @@ func VisitorID(c *fiber.Ctx) error {
 	})
 }
 
-func DeleteMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
-	err := controller.DeleteMessageByID(id)
+	err := h.messageService.DeleteMessageByID(id)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil, "Delete message successfully")
 }
 
-func UpdateMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) UpdateMessage(c *fiber.Ctx) error {
 	req := &request.UpdateMessageRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
@@ -79,14 +89,14 @@ func UpdateMessage(c *fiber.Ctx) error {
 	}
 	req.AuthorIP = jti
 
-	err = controller.UpdateMessage(req)
+	err = h.messageService.UpdateMessage(req)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil, "Update message successfully")
 }
 
-func UpdateMessagePosition(c *fiber.Ctx) error {
+func (h *MessageHandler) UpdateMessagePosition(c *fiber.Ctx) error {
 	req := &request.UpdateMessagePositionRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
@@ -99,63 +109,71 @@ func UpdateMessagePosition(c *fiber.Ctx) error {
 	}
 	req.AuthorIP = jti
 
-	err = controller.UpdateMessagePosition(req, false)
+	err = h.messageService.UpdateMessagePosition(req, false)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil, "Update message position successfully")
 }
 
-func DetailMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) DetailMessage(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
-	msg, err := controller.GetMessageByID(id)
+	msg, err := h.messageService.GetMessageByID(id)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
-	return util.SuccessResponse(c, msg)
+	d := h.dtoService.GetMessageEntityFromTable(msg)
+	return util.SuccessResponse(c, d)
 }
 
-func ListMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) messages(msgs []*table.MessageTable) map[string]any {
+	ret := make(map[string]any)
+	mes := h.dtoService.GetMessagesEntityFromTables(msgs)
+	ret["messages"] = mes
+	return ret
+}
+
+func (h *MessageHandler) ListMessage(c *fiber.Ctx) error {
 	req := &request.MessageListRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	result := make(map[string]any)
+	var result map[string]any
 	if req.DateRange == nil {
-		msgs, err := controller.ListMessages(nil, req.Sort)
+		msgs, err := h.messageService.ListMessages(nil, req.Sort)
 		if err == nil {
-			result["messages"] = msgs
+			result = h.messages(msgs)
 		}
 	} else {
-		msgs, err := controller.ListMessages(req.DateRange, req.Sort)
+		msgs, err := h.messageService.ListMessages(req.DateRange, req.Sort)
 		if err == nil {
-			result["messages"] = msgs
+			result = h.messages(msgs)
 		}
 	}
 	return util.SuccessResponse(c, result)
 }
 
-func ListMessagePublic(c *fiber.Ctx) error {
+func (h *MessageHandler) ListMessagePublic(c *fiber.Ctx) error {
 	req := &request.MessageListRequest{}
 	err := c.BodyParser(req)
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	result := make(map[string]any)
+	var result map[string]any
 	var msgs []*entity.MessageEntity
 	if req.DateRange == nil {
-		ms, err := controller.ListMessages(nil, req.Sort)
+		ms, err := h.messageService.ListMessages(nil, req.Sort)
 		if err == nil {
-			msgs = ms
+			msgs = h.dtoService.GetMessagesEntityFromTables(ms)
 		}
 	} else {
-		ms, err := controller.ListMessages(req.DateRange, req.Sort)
+		ms, err := h.messageService.ListMessages(req.DateRange, req.Sort)
 		if err == nil {
-			msgs = ms
+			msgs = h.dtoService.GetMessagesEntityFromTables(ms)
 		}
 	}
 	filtered := make([]*entity.MessageEntity, 0, len(msgs))
@@ -168,31 +186,31 @@ func ListMessagePublic(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, result)
 }
 
-func ViewMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) ViewMessage(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
-	err := controller.ViewMessage(id)
+	err := h.messageService.ViewMessage(id)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil)
 }
 
-func LikeMessage(c *fiber.Ctx) error {
+func (h *MessageHandler) LikeMessage(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
-	err := controller.LikeMessage(id)
+	err := h.messageService.LikeMessage(id)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil)
 }
 
-func OwnedMessageIDs(c *fiber.Ctx) error {
+func (h *MessageHandler) OwnedMessageIDs(c *fiber.Ctx) error {
 	token := c.Query("token", "")
 	if token == "" {
 		return util.ErrorResponse(c, 400, "token is required")
@@ -201,7 +219,7 @@ func OwnedMessageIDs(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	ids, err := controller.GetOwnedMessageIDs(jti)
+	ids, err := h.messageService.GetOwnedMessageIDs(jti)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
 	}

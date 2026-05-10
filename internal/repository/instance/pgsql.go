@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/database"
 	"sync"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 type Database struct {
-	DB *gorm.DB
+	DB      *gorm.DB
 	counter *counterBuffer
 }
 
@@ -30,6 +31,37 @@ func UseDatabase() *Database {
 	return db
 }
 
+func (d *Database) applyCounterDelta(postType, id string, viewDelta, likeDelta int64) {
+	if viewDelta == 0 && likeDelta == 0 {
+		return
+	}
+
+	var model any
+	switch postType {
+	case "article":
+		model = &table.ArticleTable{}
+	case "sharing":
+		model = &table.SharingTable{}
+	case "message":
+		model = &table.MessageTable{}
+	default:
+		return
+	}
+
+	updates := make(map[string]any, 2)
+	if viewDelta != 0 {
+		updates["view"] = gorm.Expr("view + ?", viewDelta)
+	}
+	if likeDelta != 0 {
+		updates["like"] = gorm.Expr("like + ?", likeDelta)
+	}
+	_ = d.DB.Model(model).Where("id = ? AND status = 1", id).Updates(updates).Error
+}
+
+func (d *Database) GetCounter() *counterBuffer {
+	return d.counter
+}
+
 type counterKey struct {
 	postType string
 	id       string
@@ -44,9 +76,8 @@ type counterBuffer struct {
 	db            *Database
 	flushInterval time.Duration
 	maxKeys       int
-
-	mu     sync.Mutex
-	deltas map[counterKey]counterDelta
+	mu            sync.Mutex
+	deltas        map[counterKey]counterDelta
 }
 
 func newCounterBuffer(db *Database, flushInterval time.Duration, maxKeys int) *counterBuffer {
