@@ -5,15 +5,18 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
+	"errors"
 )
 
 type SharingService struct {
-	sharings interfaces.SharingRepository
-	tags     interfaces.TagRepository
+	sharings     interfaces.SharingRepository
+	tags         interfaces.TagRepository
+	attachments  interfaces.AttachmentRepository
+	sharingLinks interfaces.SharingAttachmentLinkRepository
 }
 
-func NewSharingService(sharings interfaces.SharingRepository, tags interfaces.TagRepository) *SharingService {
-	return &SharingService{sharings: sharings, tags: tags}
+func NewSharingService(sharings interfaces.SharingRepository, tags interfaces.TagRepository, attachments interfaces.AttachmentRepository, sharingLinks interfaces.SharingAttachmentLinkRepository) *SharingService {
+	return &SharingService{sharings: sharings, tags: tags, attachments: attachments, sharingLinks: sharingLinks}
 }
 
 func (s *SharingService) CreateSharing(req *request.CreateSharingRequest) error {
@@ -26,7 +29,14 @@ func (s *SharingService) CreateSharing(req *request.CreateSharingRequest) error 
 		AuthorID:   req.Author,
 		Attachment: req.Attachment,
 	}
+	if err := s.validateAttachmentIDs(req.AttachmentIDs); err != nil {
+		return err
+	}
 	err := s.sharings.CreateSharing(record)
+	if err != nil {
+		return err
+	}
+	err = s.sharingLinks.ReplaceSharingAttachments(sid, req.AttachmentIDs)
 	if err != nil {
 		return err
 	}
@@ -50,7 +60,14 @@ func (s *SharingService) UpdateSharing(req *request.UpdateSharingRequest) error 
 		AuthorID:   req.Author,
 		Attachment: req.Attachment,
 	}
+	if err := s.validateAttachmentIDs(req.AttachmentIDs); err != nil {
+		return err
+	}
 	err := s.sharings.UpdateSharing(record)
+	if err != nil {
+		return err
+	}
+	err = s.sharingLinks.ReplaceSharingAttachments(req.ID, req.AttachmentIDs)
 	if err != nil {
 		return err
 	}
@@ -86,9 +103,33 @@ func (s *SharingService) DeleteSharingByID(id string) error {
 	if err != nil {
 		return err
 	}
+	_ = s.sharingLinks.DeleteBySharingID(id)
 	err = s.tags.DeleteTagLinkFromTarget(id, 2)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (s *SharingService) validateAttachmentIDs(ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	records, err := s.attachments.GetAttachmentsByIDs(ids)
+	if err != nil {
+		return err
+	}
+	rm := make(map[string]bool, len(records))
+	for _, r := range records {
+		rm[r.ID] = true
+	}
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		if _, ok := rm[id]; !ok {
+			return errors.New("attachment not exist")
+		}
 	}
 	return nil
 }

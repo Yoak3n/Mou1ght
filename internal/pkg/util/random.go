@@ -60,3 +60,11 @@ func GenMessageID() string {
 func GenVisitorID() string {
 	return "vis-" + nowSecondToString()[5:] + generateRandomString(10)
 }
+
+func GenAttachmentID() string {
+	return "att-" + nowMilliSecondToString()[8:] + generateRandomString(8)
+}
+
+func GenSharingAttachmentLinkID() string {
+	return "sal-" + nowMilliSecondToString()[8:] + generateRandomString(8)
+}

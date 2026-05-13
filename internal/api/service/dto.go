@@ -9,15 +9,17 @@ import (
 )
 
 type DTOService struct {
-	ur      interfaces.UserRepository
-	ar      interfaces.ArticleRepository
-	tr      interfaces.TagRepository
-	cr      interfaces.CategoryRepository
-	counter interfaces.PostCounter
+	ur          interfaces.UserRepository
+	ar          interfaces.ArticleRepository
+	tr          interfaces.TagRepository
+	cr          interfaces.CategoryRepository
+	attachments interfaces.AttachmentRepository
+	sal         interfaces.SharingAttachmentLinkRepository
+	counter     interfaces.PostCounter
 }
 
-func NewDTOService(ur interfaces.UserRepository, ar interfaces.ArticleRepository, tr interfaces.TagRepository, cr interfaces.CategoryRepository, counter interfaces.PostCounter) *DTOService {
-	return &DTOService{ur: ur, ar: ar, tr: tr, cr: cr, counter: counter}
+func NewDTOService(ur interfaces.UserRepository, ar interfaces.ArticleRepository, tr interfaces.TagRepository, cr interfaces.CategoryRepository, attachments interfaces.AttachmentRepository, sal interfaces.SharingAttachmentLinkRepository, counter interfaces.PostCounter) *DTOService {
+	return &DTOService{ur: ur, ar: ar, tr: tr, cr: cr, attachments: attachments, sal: sal, counter: counter}
 }
 
 func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, detail bool) *entity.ArticleEntity {
@@ -158,6 +160,30 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 	}
 	viewDelta, likeDelta := s.counter.GetCounterDelta("sharing", sharing.ID)
 	length := util.MeasureArticleLength(sharing.Content)
+	attachments := make([]entity.AttachmentEntity, 0)
+	ids, err := s.sal.GetAttachmentIDsBySharingID(sharing.ID)
+	if err == nil && len(ids) > 0 {
+		records, e := s.attachments.GetAttachmentsByIDs(ids)
+		if e == nil {
+			rm := make(map[string]table.AttachmentTable, len(records))
+			for _, r := range records {
+				rm[r.ID] = r
+			}
+			for _, id := range ids {
+				if r, ok := rm[id]; ok {
+					attachments = append(attachments, entity.AttachmentEntity{
+						ID:           r.ID,
+						URL:          "/upload/" + strings.TrimPrefix(r.StoragePath, "/"),
+						OriginalName: r.OriginalName,
+						Size:         r.Size,
+						Mime:         r.Mime,
+					})
+				}
+			}
+		}
+	} else {
+		attachments = entity.NewAttachmentsEntityFromPaths(strings.Split(sharing.Attachment, ","))
+	}
 	e := &entity.SharingEntity{
 		ID:      sharing.ID,
 		Content: sharing.Content,
@@ -172,7 +198,7 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 			CreatedAt: sharing.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt: sharing.UpdatedAt.Format("2006-01-02 15:04:05"),
 		},
-		Attachments: entity.NewAttachmentsEntityFromPaths(strings.Split(sharing.Attachment, ",")),
+		Attachments: attachments,
 	}
 	tags, err := s.tr.QueryTagsByID(sharing.ID, table.SharingTag)
 	if err == nil {

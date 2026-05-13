@@ -48,6 +48,8 @@ func InitDatabase() *gorm.DB {
 		&table.UserTable{},
 		&table.SharingTable{},
 		&table.ArticleTable{},
+		&table.AttachmentTable{},
+		&table.SharingAttachmentLinkTable{},
 		&table.TagTable{},
 		&table.TagLinkTable{},
 		&table.CategoryTable{},
