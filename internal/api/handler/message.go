@@ -6,6 +6,7 @@ import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
+	"errors"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -45,6 +46,10 @@ func (h *MessageHandler) CreateMessage(c *fiber.Ctx) error {
 	err = h.messageService.CreateMessage(req)
 	if err != nil {
 		log.Printf("CreateMessage controller error: %v\n", err)
+		ferr := &fiber.Error{}
+		if errors.As(err, &ferr) {
+			return util.ErrorResponse(c, ferr.Code, ferr.Message)
+		}
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil, "Create message successfully")

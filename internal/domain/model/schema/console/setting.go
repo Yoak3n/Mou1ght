@@ -46,3 +46,25 @@ func (bs *BlogSetting) ToMap() map[string]any {
 		"css":      bs.BottomExtra.CSS,
 	}
 }
+
+type PublicBoard struct {
+	Question     string `json:"question"`
+	NeedReviewed bool   `json:"need_reviewed"`
+}
+
+type PublicBlogSetting struct {
+	NavBar      NavBar       `json:"nav_bar"`
+	BottomExtra BottomExtra  `json:"bottom_extra"`
+	Board       PublicBoard  `json:"board"`
+}
+
+func (bs *BlogSetting) ToPublic() PublicBlogSetting {
+	return PublicBlogSetting{
+		NavBar:      bs.NavBar,
+		BottomExtra: bs.BottomExtra,
+		Board: PublicBoard{
+			Question:     bs.Board.Question,
+			NeedReviewed: bs.Board.NeedReviewed,
+		},
+	}
+}

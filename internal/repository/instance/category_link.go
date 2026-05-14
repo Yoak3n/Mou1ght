@@ -3,7 +3,6 @@ package instance
 import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
-	"maps"
 
 	"gorm.io/gorm"
 )
@@ -29,32 +28,41 @@ func (c *CategoryLinkRepository) DeleteCategoryLinkByArticleID(articleID string)
 }
 
 func (c *CategoryLinkRepository) UpdateCategoryLinks(articleID string, categoryIDs map[string]bool) error {
-	if len(categoryIDs) == 0 {
-		return nil
-	}
-	unhandledIDs := make(map[string]bool)
-	maps.Copy(unhandledIDs, categoryIDs)
 	currentIDs := make([]string, 0)
 	err := c.db.Where("article_id = ?", articleID).Model(&table.CategoryLinkTable{}).Pluck("category_id", &currentIDs).Error
 	if err != nil {
 		return err
 	}
+	if len(categoryIDs) == 0 {
+		if len(currentIDs) == 0 {
+			return nil
+		}
+		return c.DeleteCategoryLinkByArticleID(articleID)
+	}
+
+	currentSet := make(map[string]bool, len(currentIDs))
 	var lastError error
 	for _, currentID := range currentIDs {
-		unhandledIDs[currentID] = false
-		if _, ok := categoryIDs[currentID]; !ok {
-			lastError = c.DeleteCategoryLinkByArticleID(currentID)
+		currentSet[currentID] = true
+		if _, ok := categoryIDs[currentID]; ok {
+			continue
 		}
+		lastError = c.db.
+			Where("article_id = ? AND category_id = ?", articleID, currentID).
+			Delete(&table.CategoryLinkTable{}).
+			Error
 	}
-	for k, v := range unhandledIDs {
-		if !v {
-			link := &table.CategoryLinkTable{
-				ID:         util.GenCategoryLinkID(),
-				ArticleID:  articleID,
-				CategoryID: k,
-			}
-			lastError = c.CreateCategoryLink(link)
+
+	for categoryID := range categoryIDs {
+		if currentSet[categoryID] {
+			continue
 		}
+		link := &table.CategoryLinkTable{
+			ID:         util.GenCategoryLinkID(),
+			ArticleID:  articleID,
+			CategoryID: categoryID,
+		}
+		lastError = c.CreateCategoryLink(link)
 	}
 
 	return lastError

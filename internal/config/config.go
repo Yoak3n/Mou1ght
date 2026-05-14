@@ -90,3 +90,8 @@ func UpdateBlogSetting(bs console.BlogSetting) {
 	config.Blog = bs
 	UpdateConfig(config)
 }
+
+func UpdateSecuritySetting(ss SecuritySetting) {
+	config.Security = ss
+	UpdateConfig(config)
+}

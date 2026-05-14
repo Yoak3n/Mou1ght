@@ -24,6 +24,14 @@ func GetBlogSetting(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, setting)
 }
 
+func GetPublicBlogSetting(c *fiber.Ctx) error {
+	setting, err := service.GetPublicBlogSetting()
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, setting)
+}
+
 func UpdateBlogSetting(c *fiber.Ctx) error {
 	setting := new(console.BlogSetting)
 	if err := c.BodyParser(setting); err != nil {

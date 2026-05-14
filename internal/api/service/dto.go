@@ -22,11 +22,20 @@ func NewDTOService(ur interfaces.UserRepository, ar interfaces.ArticleRepository
 	return &DTOService{ur: ur, ar: ar, tr: tr, cr: cr, attachments: attachments, sal: sal, counter: counter}
 }
 
+func missingUserEntity(id string) entity.UserEntity {
+	return entity.UserEntity{
+		ID:       id,
+		UserName: "unknown",
+		Avatar:   "",
+		Role:     "unknown",
+	}
+}
+
 func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, detail bool) *entity.ArticleEntity {
-	user, err := s.ur.GetUser(article.AuthorID)
-	if err != nil {
+	if article == nil {
 		return nil
 	}
+	user, err := s.ur.GetUser(article.AuthorID)
 	viewDelta, likeDelta := s.counter.GetCounterDelta("article", article.ID)
 	length := util.MeasureArticleLength(article.Content)
 	content := ""
@@ -51,7 +60,11 @@ func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, deta
 			CreatedAt: article.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt: article.UpdatedAt.Format("2006-01-02 15:04:05"),
 		},
-		Author: *entity.NewUserEntityFromTable(user, false),
+	}
+	if err != nil || user == nil {
+		e.Author = missingUserEntity(article.AuthorID)
+	} else {
+		e.Author = *entity.NewUserEntityFromTable(user, false)
 	}
 	tags, err := s.tr.QueryTagsByID(article.ID, table.ArticleTag)
 	if err == nil {
@@ -65,17 +78,23 @@ func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, deta
 }
 
 func (s *DTOService) GetArticlesEntiesFromTable(list []*table.ArticleTable, detail bool) []*entity.ArticleEntity {
-	es := make([]*entity.ArticleEntity, len(list))
-	for i, article := range list {
-		es[i] = s.GetArticleEntityFromTable(article, detail)
+	es := make([]*entity.ArticleEntity, 0, len(list))
+	for _, article := range list {
+		e := s.GetArticleEntityFromTable(article, detail)
+		if e != nil {
+			es = append(es, e)
+		}
 	}
 	return es
 }
 
 func (s *DTOService) GetCategoryWithArticlesEntityFromTable(category *table.CategoryTable, articles []table.ArticleTable) *entity.CategoryWithArticlesEntity {
-	as := make([]entity.ArticleEntity, len(articles))
-	for i, article := range articles {
-		as[i] = *s.GetArticleEntityFromTable(&article, false)
+	as := make([]entity.ArticleEntity, 0, len(articles))
+	for i := range articles {
+		e := s.GetArticleEntityFromTable(&articles[i], false)
+		if e != nil {
+			as = append(as, *e)
+		}
 	}
 	return &entity.CategoryWithArticlesEntity{
 		Category: entity.NewCategoryInformationEntityFromTable(category),
@@ -154,10 +173,10 @@ func (s *DTOService) GetMessagesEntityFromTables(msgs []*table.MessageTable) []*
 }
 
 func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *entity.SharingEntity {
-	user, err := s.ur.GetUser(sharing.AuthorID)
-	if err != nil {
+	if sharing == nil {
 		return nil
 	}
+	user, err := s.ur.GetUser(sharing.AuthorID)
 	viewDelta, likeDelta := s.counter.GetCounterDelta("sharing", sharing.ID)
 	length := util.MeasureArticleLength(sharing.Content)
 	attachments := make([]entity.AttachmentEntity, 0)
@@ -187,7 +206,6 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 	e := &entity.SharingEntity{
 		ID:      sharing.ID,
 		Content: sharing.Content,
-		Author:  *entity.NewUserEntityFromTable(user, false),
 		State: entity.PostState{
 			Like:   sharing.Like + likeDelta,
 			View:   sharing.View + viewDelta,
@@ -199,6 +217,11 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 			UpdatedAt: sharing.UpdatedAt.Format("2006-01-02 15:04:05"),
 		},
 		Attachments: attachments,
+	}
+	if err != nil || user == nil {
+		e.Author = missingUserEntity(sharing.AuthorID)
+	} else {
+		e.Author = *entity.NewUserEntityFromTable(user, false)
 	}
 	tags, err := s.tr.QueryTagsByID(sharing.ID, table.SharingTag)
 	if err == nil {
@@ -219,9 +242,12 @@ func (s *DTOService) GetSharingsEntityFromTables(sharings []*table.SharingTable)
 }
 
 func (s *DTOService) GetTagWithArticlesEntityFromTable(tag *table.TagTable, articles []table.ArticleTable) *entity.TagWithArticlesEntity {
-	as := make([]entity.ArticleEntity, len(articles))
-	for i, article := range articles {
-		as[i] = *s.GetArticleEntityFromTable(&article, false)
+	as := make([]entity.ArticleEntity, 0, len(articles))
+	for i := range articles {
+		e := s.GetArticleEntityFromTable(&articles[i], false)
+		if e != nil {
+			as = append(as, *e)
+		}
 	}
 	return &entity.TagWithArticlesEntity{
 		Tag:      entity.NewTagInformationEntityFromTable(tag),
@@ -230,9 +256,12 @@ func (s *DTOService) GetTagWithArticlesEntityFromTable(tag *table.TagTable, arti
 }
 
 func (s *DTOService) GetTagWithSharingEntityFromTable(tag *table.TagTable, sharings []table.SharingTable) *entity.TagWithSharingEntity {
-	ss := make([]entity.SharingEntity, len(sharings))
-	for i, sharing := range sharings {
-		ss[i] = *s.GetSharingEntityFromTable(&sharing)
+	ss := make([]entity.SharingEntity, 0, len(sharings))
+	for i := range sharings {
+		e := s.GetSharingEntityFromTable(&sharings[i])
+		if e != nil {
+			ss = append(ss, *e)
+		}
 	}
 	return &entity.TagWithSharingEntity{
 		Tag:      entity.NewTagInformationEntityFromTable(tag),
@@ -242,12 +271,18 @@ func (s *DTOService) GetTagWithSharingEntityFromTable(tag *table.TagTable, shari
 
 func (s *DTOService) GetUserWithPostEntityFromTable(author *table.UserTable, sharings []table.SharingTable, articles []table.ArticleTable) *entity.UserWithPostEntity {
 	sharing := make([]entity.SharingEntity, 0)
-	for _, st := range sharings {
-		sharing = append(sharing, *s.GetSharingEntityFromTable(&st))
+	for i := range sharings {
+		e := s.GetSharingEntityFromTable(&sharings[i])
+		if e != nil {
+			sharing = append(sharing, *e)
+		}
 	}
 	article := make([]entity.ArticleEntity, 0)
-	for _, a := range articles {
-		article = append(article, *s.GetArticleEntityFromTable(&a, false))
+	for i := range articles {
+		e := s.GetArticleEntityFromTable(&articles[i], false)
+		if e != nil {
+			article = append(article, *e)
+		}
 	}
 
 	return &entity.UserWithPostEntity{

@@ -26,7 +26,8 @@ func (s *ArticleService) CreateArticle(req *request.CreateArticleRequest) error 
 			ID:      aid,
 			Content: req.Content,
 		},
-		Title: req.Title,
+		Title:    req.Title,
+		AuthorID: req.Author,
 	}
 	err := s.articles.CreateArticle(record)
 	if err != nil {

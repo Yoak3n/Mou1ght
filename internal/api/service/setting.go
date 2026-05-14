@@ -13,6 +13,10 @@ func GetBlogSetting() (console.BlogSetting, error) {
 	return config.GetConfig().Blog, nil
 }
 
+func GetPublicBlogSetting() (console.PublicBlogSetting, error) {
+	return config.GetConfig().Blog.ToPublic(), nil
+}
+
 func UpdateBlogSetting(setting console.BlogSetting) error {
 	config.UpdateBlogSetting(setting)
 	return nil

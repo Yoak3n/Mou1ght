@@ -6,7 +6,10 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
+	"strings"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type MessageService struct {
@@ -18,6 +21,17 @@ func NewMessageService(messages interfaces.MessageRepository) *MessageService {
 }
 
 func (m *MessageService) CreateMessage(req *request.CreateMessageRequest) error {
+	question := strings.TrimSpace(config.GetConfig().Blog.Board.Question)
+	if question != "" {
+		expected := strings.TrimSpace(config.GetConfig().Blog.Board.Answer)
+		if expected == "" {
+			return fiber.NewError(500, "Board question enabled but answer is not configured")
+		}
+		if strings.TrimSpace(req.BoardAnswer) != expected {
+			return fiber.NewError(403, "Incorrect answer")
+		}
+	}
+
 	mid := util.GenMessageID()
 	record := &table.MessageTable{
 		PostBase: table.PostBase{

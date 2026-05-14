@@ -48,6 +48,9 @@ func (u *UserHandler) Register(c *fiber.Ctx) error {
 	}
 	record, err := u.userSvc.UserRegisterCheck(registerRequest)
 	if err != nil {
+		if errors.Is(err, service.ErrRegistrationDisabled) {
+			return util.ErrorResponse(c, 403, err.Error())
+		}
 		return util.ErrorResponse(c, 400, err.Error())
 	}
 	token, err := util.ReleaseToken(record.ID)

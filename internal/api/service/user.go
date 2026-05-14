@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrRegistrationDisabled = errors.New("registration disabled")
+
 type UserService struct {
 	users    interfaces.UserRepository
 	articles interfaces.ArticleRepository
@@ -38,6 +40,14 @@ func (s *UserService) UserLoginCheck(req *request.UserLoginRequest) (string, err
 }
 
 func (s *UserService) UserRegisterCheck(req *request.UserRegisterRequest) (*table.UserTable, error) {
+	count, err := s.users.CountUsers()
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, ErrRegistrationDisabled
+	}
+
 	uid := ""
 	for {
 		uid = util.GenUserID()
@@ -51,6 +61,7 @@ func (s *UserService) UserRegisterCheck(req *request.UserRegisterRequest) (*tabl
 		ID:       uid,
 		UserName: req.UserName,
 		Email:    req.Email,
+		Role:     0,
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {

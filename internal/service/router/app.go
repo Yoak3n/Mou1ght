@@ -17,9 +17,10 @@ func setupUserRouter(r fiber.Router, userHandler *handler.UserHandler) {
 
 func setupSettingRouter(r fiber.Router) {
 	setting := r.Group("/setting")
-	setting.Get("/all", handler.GetAllSetting)
-	setting.Get("/blog", handler.GetBlogSetting)
-	setting.Put("/blog", handler.UpdateBlogSetting)
+	setting.Use(middleware.Auth).Get("/all", handler.GetAllSetting)
+	setting.Get("/blog/public", handler.GetPublicBlogSetting)
+	setting.Use(middleware.Auth).Get("/blog", handler.GetBlogSetting)
+	setting.Use(middleware.Auth).Put("/blog", handler.UpdateBlogSetting)
 }
 
 func setupAttachmentRouter(r fiber.Router, attachmentHandler *handler.AttachmentHandler) {

@@ -39,6 +39,12 @@ func (d *UserRepository) QueryUsers(username []string) ([]table.UserTable, error
 	return users, nil
 }
 
+func (d *UserRepository) CountUsers() (int64, error) {
+	var count int64
+	err := d.db.Model(&table.UserTable{}).Count(&count).Error
+	return count, err
+}
+
 func (d *UserRepository) UpdateUser(user *table.UserTable) error {
 	return d.db.Save(user).Error
 }

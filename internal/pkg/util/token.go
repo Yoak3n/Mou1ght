@@ -12,26 +12,24 @@ import (
 )
 
 var (
-	sampleJwtKey  []byte
+	primaryJwtKey []byte
 	visitorJwtKey []byte
 	keyOnce       sync.Once
 )
 
 const (
-	defaultJwtKey        = "sampleJwtKey"
-	defaultVisitorJwtKey = "sampleVisitorJwtKey"
-	envJwtKey            = "JWT_KEY"
-	envVisitorJwtKey     = "VISITOR_JWT_KEY"
+	envJwtKey        = "JWT_KEY"
+	envVisitorJwtKey = "VISITOR_JWT_KEY"
 )
 
 func initKeys() {
 	keyOnce.Do(func() {
-		sampleJwtKey = resolveKey(envJwtKey, defaultJwtKey, true)
-		visitorJwtKey = resolveKey(envVisitorJwtKey, defaultVisitorJwtKey, false)
+		primaryJwtKey = resolveKey(envJwtKey, true)
+		visitorJwtKey = resolveKey(envVisitorJwtKey, false)
 	})
 }
 
-func resolveKey(envKey string, fallback string, isPrimary bool) []byte {
+func resolveKey(envKey string, isPrimary bool) []byte {
 	cfg := config.GetConfig().GetSecurity()
 	if isPrimary && cfg.JwtKey != "" {
 		return []byte(cfg.JwtKey)
@@ -42,12 +40,28 @@ func resolveKey(envKey string, fallback string, isPrimary bool) []byte {
 	if v := os.Getenv(envKey); v != "" {
 		return []byte(v)
 	}
-	return []byte(fallback)
+
+	randomKey := generateRandomKey()
+
+	if isPrimary {
+		cfg.JwtKey = randomKey
+	} else {
+		cfg.VisitorJwtKey = randomKey
+	}
+	config.UpdateSecuritySetting(cfg)
+
+	return []byte(randomKey)
 }
 
-func GetSampleJwtKey() []byte {
+func generateRandomKey() string {
+	bytes := make([]byte, 32)
+	_, _ = rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
+
+func GetPrimaryJwtKey() []byte {
 	initKeys()
-	return sampleJwtKey
+	return primaryJwtKey
 }
 
 func GetVisitorJwtKey() []byte {
@@ -78,7 +92,7 @@ func ReleaseToken(userID string) (string, error) {
 		MapClaims: mapClaims,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(GetSampleJwtKey())
+	tokenString, err := token.SignedString(GetPrimaryJwtKey())
 	if err != nil {
 		return "", err
 	}
@@ -88,7 +102,7 @@ func ReleaseToken(userID string) (string, error) {
 func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return GetSampleJwtKey(), err
+		return GetPrimaryJwtKey(), err
 	})
 	return token, claims, err
 }
@@ -96,7 +110,7 @@ func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 func ClearToken(tokenString string) error {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return GetSampleJwtKey(), err
+		return GetPrimaryJwtKey(), err
 	})
 	token.Valid = false
 	return err

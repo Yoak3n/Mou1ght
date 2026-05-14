@@ -4,8 +4,6 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 
-	"maps"
-
 	"gorm.io/gorm"
 )
 
@@ -55,41 +53,45 @@ func (t *TagRepository) UpdateTag(tag *table.TagTable) error {
 
 // UpdateTargetLinks 更新目标的标签链接
 // ids 中为 true 的标签会被添加，为 false 的标签会被删除
-func (t *TagRepository) UpdateTargetLinks(targetID string, targetType table.TagType, ids map[string]bool) error {
-	if len(ids) == 0 {
-		return nil
-	}
+func (t *TagRepository) UpdateTargetLinks(targetID string, targetType table.TagType, tagIds map[string]bool) error {
 	currentIDs := make([]string, 0)
-	unhandledIDs := make(map[string]bool)
-	maps.Copy(unhandledIDs, ids)
 	err := t.db.Where("target_id = ? AND target_type = ?", targetID, targetType).Model(&table.TagLinkTable{}).Pluck("tag_id", &currentIDs).Error
 	if err != nil {
 		return err
 	}
+	if len(tagIds) == 0 {
+		if len(currentIDs) == 0 {
+			return nil
+		}
+		return t.DeleteTagLinkFromTarget(targetID, targetType)
+	}
+
+	currentSet := make(map[string]bool, len(currentIDs))
 	var lastError error
 	for _, currentID := range currentIDs {
-		unhandledIDs[currentID] = false
-		if _, ok := ids[currentID]; !ok {
-			lastError = t.DeleteTagLinkByTagID(currentID)
-			if lastError != nil {
-				continue
-			}
+		currentSet[currentID] = true
+		if _, ok := tagIds[currentID]; ok {
+			continue
 		}
+		lastError = t.db.
+			Where("target_id = ? AND target_type = ? AND tag_id = ?", targetID, targetType, currentID).
+			Delete(&table.TagLinkTable{}).
+			Error
 	}
-	for k, v := range unhandledIDs {
-		if !v {
-			link := &table.TagLinkTable{
-				TargetID:   targetID,
-				TargetType: targetType,
-				TagID:      k,
-				ID:         util.GenTagLinkID(),
-			}
-			lastError = t.CreateTagLink(link)
-			if lastError != nil {
-				continue
-			}
+
+	for tagID := range tagIds {
+		if currentSet[tagID] {
+			continue
 		}
+		link := &table.TagLinkTable{
+			TargetID:   targetID,
+			TargetType: targetType,
+			TagID:      tagID,
+			ID:         util.GenTagLinkID(),
+		}
+		lastError = t.CreateTagLink(link)
 	}
+
 	return lastError
 }
 

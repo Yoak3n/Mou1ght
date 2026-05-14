@@ -71,7 +71,7 @@ func (a *ArticleRepository) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*
 	if desc {
 		order = "created_at DESC"
 	}
-	err := a.db.Find(&articles).Where("user_id IN ?", ids).Order(order).Error
+	err := a.db.Where("author_id IN ?", ids).Order(order).Find(&articles).Error
 	if err != nil {
 		return nil, err
 	}
