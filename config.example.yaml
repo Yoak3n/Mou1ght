@@ -2,11 +2,14 @@ blog:
     nav_bar:
         links:
             - type: internal
-              href: ""
+              href: "/"
               label: home
             - type: internal
-              href: ""
+              href: "/board"
               label: board
+            - type: internal
+              href: "/sharings"
+              label: sharings
         website_information:
             title: Mou1ght
             icon: ""
