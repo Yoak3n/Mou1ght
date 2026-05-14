@@ -7,4 +7,5 @@ type AttachmentRepository interface {
 	GetAttachmentByID(id string) (*table.AttachmentTable, error)
 	GetAttachmentsByIDs(ids []string) ([]table.AttachmentTable, error)
 	GetAttachmentBySha256(sha256 string, size int64) (*table.AttachmentTable, error)
+	ListAttachments() ([]table.AttachmentTable, error)
 }

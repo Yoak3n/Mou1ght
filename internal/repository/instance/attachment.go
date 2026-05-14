@@ -42,3 +42,9 @@ func (r *AttachmentRepository) GetAttachmentBySha256(sha256 string, size int64) 
 	}
 	return attachment, result.Error
 }
+
+func (r *AttachmentRepository) ListAttachments() ([]table.AttachmentTable, error) {
+	attachments := make([]table.AttachmentTable, 0)
+	err := r.db.Order("created_at DESC").Find(&attachments).Error
+	return attachments, err
+}

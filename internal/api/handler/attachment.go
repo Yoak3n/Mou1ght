@@ -16,8 +16,13 @@ func NewAttachmentHandler(attachmentService *service.AttachmentService) *Attachm
 }
 
 func (h *AttachmentHandler) GetAttachmentList(c *fiber.Ctx) error {
-	attachmentList := service.GetAttachmentList()
-	return util.SuccessResponse(c, attachmentList)
+	attachments, err := h.attachmentService.ListAll()
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, fiber.Map{
+		"attachments": attachments,
+	}, "")
 }
 
 func (h *AttachmentHandler) UploadAttachment(c *fiber.Ctx) error {
