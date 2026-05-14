@@ -33,9 +33,16 @@ func (ps *PostService) queryPost(req *request.PostListRequest, typ string) *Post
 	ret := &PostResult{}
 	var startDate, endDate *time.Time
 	if req.Filter.DateRange != nil {
-		sd, _ := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.StartDate)
-		ed, _ := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.EndDate)
-		startDate, endDate = &sd, &ed
+		if req.Filter.DateRange.StartDate != "" {
+			if sd, err := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.StartDate); err == nil {
+				startDate = &sd
+			}
+		}
+		if req.Filter.DateRange.EndDate != "" {
+			if ed, err := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.EndDate); err == nil {
+				endDate = &ed
+			}
+		}
 	}
 	switch typ {
 	case "article":

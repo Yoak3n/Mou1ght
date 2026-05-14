@@ -26,8 +26,7 @@ type ArticleTable struct {
 
 type SharingTable struct {
 	PostBase
-	AuthorID   string `gorm:"not null;"`
-	Attachment string
+	AuthorID string `gorm:"not null;"`
 }
 
 type MessageTable struct {

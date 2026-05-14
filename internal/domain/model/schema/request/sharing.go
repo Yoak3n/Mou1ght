@@ -3,8 +3,8 @@ package request
 type CreateSharingRequest struct {
 	Content       string   `json:"content"`
 	Author        string   `json:"author"`
+	Private       bool     `json:"private"`
 	AttachmentIDs []string `json:"attachment_ids"`
-	Attachment    string   `json:"attachment,omitempty"`
 	Tags          []Sign   `json:"tags"`
 }
 

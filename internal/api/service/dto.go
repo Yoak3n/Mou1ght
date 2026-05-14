@@ -200,8 +200,6 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 				}
 			}
 		}
-	} else {
-		attachments = entity.NewAttachmentsEntityFromPaths(strings.Split(sharing.Attachment, ","))
 	}
 	e := &entity.SharingEntity{
 		ID:      sharing.ID,

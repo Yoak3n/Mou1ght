@@ -65,6 +65,6 @@ func GenAttachmentID() string {
 	return "att-" + nowMilliSecondToString()[8:] + generateRandomString(8)
 }
 
-func GenSharingAttachmentLinkID() string {
-	return "sal-" + nowMilliSecondToString()[8:] + generateRandomString(8)
+func GenAttachmentLinkID() string {
+	return "al-" + nowMilliSecondToString()[8:] + generateRandomString(8)
 }

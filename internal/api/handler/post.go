@@ -6,6 +6,7 @@ import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
+	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -145,20 +146,16 @@ func (h *PostHandler) categories(cm map[string]table.CategoryTable, links []tabl
 func (h *PostHandler) returnMap(res *service.PostResult) map[string]any {
 	resultMap := make(map[string]any)
 	if res.Articles != nil {
-		if len(res.Articles) > 0 {
-			resultMap["articles"] = h.dtoService.GetArticlesEntiesFromTable(res.Articles, false)
-		}
+		resultMap["articles"] = h.dtoService.GetArticlesEntiesFromTable(res.Articles, false)
 	}
 	if res.Sharings != nil {
-		if len(res.Sharings) > 0 {
-			resultMap["sharings"] = h.dtoService.GetSharingsEntityFromTables(res.Sharings)
-		}
+		resultMap["sharings"] = h.dtoService.GetSharingsEntityFromTables(res.Sharings)
+
 	}
 	if res.Messages != nil {
-		if len(res.Messages) > 0 {
-			resultMap["messages"] = h.dtoService.GetMessagesEntityFromTables(res.Messages)
-		}
+		resultMap["messages"] = h.dtoService.GetMessagesEntityFromTables(res.Messages)
 	}
+	log.Println(resultMap)
 	return resultMap
 }
 
@@ -224,7 +221,7 @@ func (h *PostHandler) ListPost(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	var resultMap map[string]any
+	resultMap := make(map[string]any)
 	// 除all外暂时未支持date_range，看需求是否需要
 	switch req.Filter.Typ {
 	case "category":
@@ -245,7 +242,6 @@ func (h *PostHandler) ListPost(c *fiber.Ctx) error {
 	default:
 		return util.ErrorResponse(c, 400, "Invalid filter type")
 	}
-
 	return util.SuccessResponse(c, resultMap)
 }
 
@@ -256,7 +252,7 @@ func (h *PostHandler) ListPostPublic(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	var resultMap map[string]any
+	resultMap := make(map[string]any)
 	switch req.Filter.Typ {
 	case "category":
 		cm, links := h.categoryService.CategoryListWithArticle(req)
@@ -276,7 +272,6 @@ func (h *PostHandler) ListPostPublic(c *fiber.Ctx) error {
 	default:
 		return util.ErrorResponse(c, 400, "Invalid filter type")
 	}
-
 	filterPublished(resultMap)
 	return util.SuccessResponse(c, resultMap)
 }

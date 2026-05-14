@@ -85,7 +85,6 @@ func (c *CategoryLinkRepository) GetArticlesFromCategoryLink(link *table.Categor
 
 func (c *CategoryLinkRepository) GetCategoryLinkByKeyword(keyword []string) (map[string]table.CategoryTable, []table.CategoryLinkTable, error) {
 	categories := make([]table.CategoryTable, 0)
-
 	err := c.db.Where("label in ?", keyword).Find(&categories).Error
 	if err != nil {
 		return nil, nil, err

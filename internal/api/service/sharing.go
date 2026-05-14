@@ -21,13 +21,17 @@ func NewSharingService(sharings interfaces.SharingRepository, tags interfaces.Ta
 
 func (s *SharingService) CreateSharing(req *request.CreateSharingRequest) error {
 	sid := util.GenSharingID()
+	status := int8(1)
+	if req.Private {
+		status = 0
+	}
 	record := &table.SharingTable{
 		PostBase: table.PostBase{
 			ID:      sid,
 			Content: req.Content,
+			Status:  status,
 		},
-		AuthorID:   req.Author,
-		Attachment: req.Attachment,
+		AuthorID: req.Author,
 	}
 	if err := s.validateAttachmentIDs(req.AttachmentIDs); err != nil {
 		return err
@@ -57,8 +61,7 @@ func (s *SharingService) UpdateSharing(req *request.UpdateSharingRequest) error 
 			ID:      req.ID,
 			Content: req.Content,
 		},
-		AuthorID:   req.Author,
-		Attachment: req.Attachment,
+		AuthorID: req.Author,
 	}
 	if err := s.validateAttachmentIDs(req.AttachmentIDs); err != nil {
 		return err

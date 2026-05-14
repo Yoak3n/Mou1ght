@@ -3,6 +3,7 @@ package instance
 import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
+	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -26,7 +27,7 @@ func (s *SharingRepository) GetSharingsByAuthorID(authorID string, desc bool) ([
 	if desc {
 		order = "created_at DESC"
 	}
-	err := s.db.Where("author_id = ?", authorID).Order(order).Find(&sharings).Error
+	err := s.db.Model(&table.SharingTable{}).Where("author_id = ?", authorID).Order(order).Find(&sharings).Error
 	if err != nil {
 		return nil, err
 	}
@@ -38,21 +39,22 @@ func (s *SharingRepository) GetSharings(startDate, endDate *time.Time) ([]*table
 	var query *gorm.DB
 	if startDate != nil {
 		if endDate == nil {
-			query = s.db.Where("created_at >= ?", startDate)
+			query = s.db.Model(&table.SharingTable{}).Where("created_at >= ?", startDate)
 		} else {
-			query = s.db.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+			query = s.db.Model(&table.SharingTable{}).Where("created_at BETWEEN ? AND ?", startDate, endDate)
 		}
 	} else {
 		if endDate == nil {
-			query = s.db
+			query = s.db.Model(&table.SharingTable{})
 		} else {
-			query = s.db.Where("created_at <= ?", endDate)
+			query = s.db.Model(&table.SharingTable{}).Where("created_at <= ?", endDate)
 		}
 	}
 	err := query.Order("created_at DESC").Find(&sharings).Error
 	if err != nil {
 		return nil, err
 	}
+	log.Println(len(sharings))
 	return sharings, nil
 }
 
@@ -76,7 +78,7 @@ func (s *SharingRepository) AddLikeCountSharing(id string) error {
 
 func (s *SharingRepository) GetSharingByID(id string) (*table.SharingTable, error) {
 	sharing := &table.SharingTable{}
-	err := s.db.Where("id = ?", id).First(&sharing).Error
+	err := s.db.Model(&table.SharingTable{}).Where("id = ?", id).First(&sharing).Error
 	return sharing, err
 }
 

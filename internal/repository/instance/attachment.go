@@ -35,6 +35,10 @@ func (r *AttachmentRepository) GetAttachmentsByIDs(ids []string) ([]table.Attach
 
 func (r *AttachmentRepository) GetAttachmentBySha256(sha256 string, size int64) (*table.AttachmentTable, error) {
 	attachment := &table.AttachmentTable{}
-	err := r.db.Where("sha256 = ? AND size = ?", sha256, size).First(attachment).Error
-	return attachment, err
+	result := r.db.Where("sha256 = ? AND size = ?", sha256, size).First(attachment)
+
+	if result.Error == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return attachment, result.Error
 }
