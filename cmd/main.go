@@ -28,25 +28,29 @@ func runApp() {
 	categoryRepository := instance.NewCategoryRepository(database.DB)
 	categoryLinkRepository := instance.NewCategoryLinkRepository(database.DB)
 	postRepository := instance.NewPostRepository(postCounter, database.DB)
+	attachmentRepository := instance.NewAttachmentRepository(database.DB)
+	sharingAttachmentLinkRepository := instance.NewSharingAttachmentLinkRepository(database.DB)
 
 	// 服务
-	dtoService := service.NewDTOService(userRepository, articleRepository, tagRepository, categoryRepository, postCounter)
+	dtoService := service.NewDTOService(userRepository, articleRepository, tagRepository, categoryRepository, attachmentRepository, sharingAttachmentLinkRepository, postCounter)
 	userService := service.NewUserService(userRepository, articleRepository, sharingRepository)
 	articleService := service.NewArticleService(articleRepository, categoryRepository, categoryLinkRepository, tagRepository)
-	sharingService := service.NewSharingService(sharingRepository, tagRepository)
+	sharingService := service.NewSharingService(sharingRepository, tagRepository, attachmentRepository, sharingAttachmentLinkRepository)
 	messageService := service.NewMessageService(messageRepository)
 	tagService := service.NewTagService(tagRepository)
 	categoryService := service.NewCategoryService(categoryRepository, categoryLinkRepository)
 	postService := service.NewPostService(articleRepository, sharingRepository, messageRepository, postRepository)
+	attachmentService := service.NewAttachmentService(attachmentRepository)
 
 	deps := router.Deps{
-		UserHandler:     handler.NewUserHandler(userService),
-		ArticleHandler:  handler.NewArticleHandler(articleService, dtoService),
-		SharingHandler:  handler.NewSharingHandler(sharingService, dtoService),
-		MessageHandler:  handler.NewMessageHandler(messageService, dtoService),
-		TagHandler:      handler.NewTagHandler(tagService),
-		CategoryHandler: handler.NewCategoryHandler(categoryService, categoryRepository, dtoService),
-		PostHandler:     handler.NewPostHandler(articleService, categoryService, sharingService, messageService, tagService, userService, postService, dtoService),
+		UserHandler:       handler.NewUserHandler(userService),
+		ArticleHandler:    handler.NewArticleHandler(articleService, dtoService),
+		SharingHandler:    handler.NewSharingHandler(sharingService, dtoService),
+		MessageHandler:    handler.NewMessageHandler(messageService, dtoService),
+		AttachmentHandler: handler.NewAttachmentHandler(attachmentService),
+		TagHandler:        handler.NewTagHandler(tagService),
+		CategoryHandler:   handler.NewCategoryHandler(categoryService, categoryRepository, dtoService),
+		PostHandler:       handler.NewPostHandler(articleService, categoryService, sharingService, messageService, tagService, userService, postService, dtoService),
 	}
 
 	r := router.InitRouter(deps)

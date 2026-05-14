@@ -5,3 +5,6 @@ config.yaml
 *.db
 data/
 adminui/
+!internal/service/router/adminui/
+!internal/service/router/adminui/.keep
+internal/service/router/adminui/dist/

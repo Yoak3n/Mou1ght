@@ -22,8 +22,8 @@ func setupSettingRouter(r fiber.Router) {
 	setting.Put("/blog", handler.UpdateBlogSetting)
 }
 
-func setupAttachmentRouter(r fiber.Router) {
+func setupAttachmentRouter(r fiber.Router, attachmentHandler *handler.AttachmentHandler) {
 	attachment := r.Group("/attachment")
-	attachment.Use(middleware.Auth).Post("/upload", handler.UploadAttachment)
-	attachment.Use(middleware.Auth).Get("/list", handler.GetAttachmentList)
+	attachment.Use(middleware.Auth).Post("/upload", attachmentHandler.UploadAttachment)
+	attachment.Use(middleware.Auth).Get("/list", attachmentHandler.GetAttachmentList)
 }

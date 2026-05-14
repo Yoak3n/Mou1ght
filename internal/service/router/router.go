@@ -27,13 +27,14 @@ func adminUIFS() fs.FS {
 }
 
 type Deps struct {
-	UserHandler     *handler.UserHandler
-	ArticleHandler  *handler.ArticleHandler
-	SharingHandler  *handler.SharingHandler
-	MessageHandler  *handler.MessageHandler
-	TagHandler      *handler.TagHandler
-	CategoryHandler *handler.CategoryHandler
-	PostHandler     *handler.PostHandler
+	UserHandler       *handler.UserHandler
+	ArticleHandler    *handler.ArticleHandler
+	SharingHandler    *handler.SharingHandler
+	MessageHandler    *handler.MessageHandler
+	AttachmentHandler *handler.AttachmentHandler
+	TagHandler        *handler.TagHandler
+	CategoryHandler   *handler.CategoryHandler
+	PostHandler       *handler.PostHandler
 }
 
 func InitRouter(deps Deps) *fiber.App {
@@ -56,7 +57,7 @@ func setupRouter(r *fiber.App, deps *Deps) {
 
 func setupApiRouter(r *fiber.App, deps *Deps) {
 	v1 := r.Group("/api/v1")
-	setupAttachmentRouter(v1)
+	setupAttachmentRouter(v1, deps.AttachmentHandler)
 	setupUserRouter(v1, deps.UserHandler)
 	setupSettingRouter(v1)
 	setupArticleRouter(v1, deps.ArticleHandler, deps.PostHandler)
