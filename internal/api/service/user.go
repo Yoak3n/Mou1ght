@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrRegistrationDisabled = errors.New("registration disabled")
+var ErrRegistrationDisabled = errors.New("注册已关闭：系统已存在管理员账号，请使用账号密码登录")
 
 type UserService struct {
 	users    interfaces.UserRepository
@@ -37,6 +37,15 @@ func (s *UserService) UserLoginCheck(req *request.UserLoginRequest) (string, err
 	user.LastLogin = time.Now()
 	_ = s.users.UpdateUser(user)
 	return user.ID, nil
+}
+
+// IsRegistrationOpen 注册仅在没有任何用户时开放（首个账号引导）。
+func (s *UserService) IsRegistrationOpen() (bool, error) {
+	count, err := s.users.CountUsers()
+	if err != nil {
+		return false, err
+	}
+	return count == 0, nil
 }
 
 func (s *UserService) UserRegisterCheck(req *request.UserRegisterRequest) (*table.UserTable, error) {

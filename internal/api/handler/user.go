@@ -60,6 +60,15 @@ func (u *UserHandler) Register(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, fiber.Map{"token": token, "name": record.UserName})
 }
 
+// RegisterStatus 返回注册开关状态，供前台决定是否展示注册入口。
+func (u *UserHandler) RegisterStatus(c *fiber.Ctx) error {
+	open, err := u.userSvc.IsRegistrationOpen()
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, fiber.Map{"open": open})
+}
+
 func (u *UserHandler) Info(c *fiber.Ctx) error {
 	userId := c.Locals("uid").(string)
 	if userId == "" {

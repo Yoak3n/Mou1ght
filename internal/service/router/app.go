@@ -10,6 +10,7 @@ import (
 func setupUserRouter(r fiber.Router, userHandler *handler.UserHandler) {
 	user := r.Group("/user")
 	user.Post("/register", userHandler.Register)
+	user.Get("/register/status", userHandler.RegisterStatus)
 	user.Post("/login", userHandler.Login)
 	user.Use(middleware.Auth).Get("/info", userHandler.Info)
 	user.Use(middleware.Auth).Post("/logout", userHandler.Logout)
