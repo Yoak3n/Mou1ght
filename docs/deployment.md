@@ -136,7 +136,7 @@ docker compose -f docker-compose.prod.yaml up -d
 
 > **自动续签机制**：certbot 服务每 12 小时检查一次，在证书到期前 30 天自动续签（Let's Encrypt 证书有效期 90 天，等于到期前自动换新）；nginx 每 12 小时重载一次，续签后的新证书会自动生效，全程零停机、无需手工干预。
 >
-> 前提：证书来自 ACME 协议 CA（Let's Encrypt / ZeroSSL 等）。如果是云厂商的非 ACME 免费证书（如阿里云/腾讯云，通常一年期），certbot 无法自动续签，请改用方式 B 或用厂商提供的 CLI/API 自动化。
+> 前提：证书来自 ACME 协议 CA（Let's Encrypt / ZeroSSL 等）。云厂商的非 ACME 免费证书（如腾讯云免费证书，现为 3 个月有效期）**无法用 certbot 自动续签**——如果坚持用腾讯云证书请走方式 B，否则建议直接用本方式（域名在腾讯云不影响，只要解析到本机、80 端口可达）。
 
 ### 方式 B：使用已有证书文件
 
@@ -150,6 +150,34 @@ chmod 600 nginx/certs/live/你的域名/*.pem
 ```
 
 > 方式 B 不会自动续期，证书到期前需要自己按厂商流程更换后替换这两个文件（nginx 每 12h 重载会自动加载新文件）。
+
+### 方式 C：acme.sh + DNSPod API（腾讯云 DNS，大陆服务器备选）
+
+如果大陆服务器访问 Let's Encrypt 的 ACME 服务器不稳定，或想要**通配符证书**，用 acme.sh 走 **DNS-01 校验**（通过 DNSPod API 改解析记录，不依赖 80 端口），同样免费且全自动。
+
+**1. 在宿主机安装 acme.sh 并配置 DNSPod 凭据**（腾讯云控制台 → DNSPod → API Token 获取 `DP_Id` / `DP_Key`）：
+
+```bash
+curl https://get.acme.sh | sh -s email=your@email.com
+export DP_Id="你的DNSPod ID"
+export DP_Key="你的DNSPod API Token"
+```
+
+**2. 签发证书并安装到 nginx 共享目录**（用 Let's Encrypt 或 ZeroSSL 都行）：
+
+```bash
+~/.acme.sh/acme.sh --issue --dns dns_dp -d 你的域名 \
+  --server letsencrypt --keylength ec-256
+
+~/.acme.sh/acme.sh --install-cert -d 你的域名 \
+  --fullchain-file "$(pwd)/nginx/certs/live/你的域名/fullchain.pem" \
+  --key-file "$(pwd)/nginx/certs/live/你的域名/privkey.pem" \
+  --reloadcmd "docker compose -f $(pwd)/docker-compose.prod.yaml exec -T nginx nginx -s reload"
+```
+
+**3. 之后自动续签**：acme.sh 会自动写入 crontab，每 60 天检查续签，续签后执行 reloadcmd 让 nginx 加载新证书，全程免手动。
+
+> acme.sh 的默认 CA 是 ZeroSSL（需注册邮箱），也可以加 `--server letsencrypt` 用 Let's Encrypt。
 
 ## 第六步：启动所有服务
 
