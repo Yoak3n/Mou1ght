@@ -75,25 +75,32 @@ vi config.yaml
 sed -i 's/your-domain.com/blog.example.com/g' nginx/conf.d/default.conf
 ```
 
-### 4.2 准备 SSL 证书目录
+### 4.2 准备证书目录
 
 ```bash
-mkdir -p nginx/ssl
+mkdir -p nginx/certs
 ```
 
-## 第五步：申请 SSL 证书
+## 第五步：配置域名与 SSL 证书
 
-### 方式 A：Let's Encrypt 自动证书（推荐）
-
-适用于已有域名解析且 80 端口可达的情况。
-
-**1. 创建临时 Nginx 配置（仅用于证书申请）：**
+先替换 nginx 配置里的占位域名（`server_name` 与证书路径中的 `your-domain.com`）：
 
 ```bash
+sed -i 's/your-domain.com/你的域名/g' nginx/conf.d/default.conf
+```
+
+### 方式 A：Let's Encrypt 自动证书（推荐，无需手动续期）
+
+适用于已有域名解析且 80 端口可达的情况。首次签发用 **webroot 认证器**（经 nginx 验证），后续 `certbot renew` 才能自动走通。
+
+**1. 用临时 80-only 配置占位（证书还没签发，nginx 此时不能加载 443）：**
+
+```bash
+cp nginx/conf.d/default.conf /tmp/default.conf.bak
 cat > nginx/conf.d/default.conf << 'EOF'
 server {
     listen 80;
-    server_name blog.example.com;
+    server_name 你的域名;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -101,61 +108,48 @@ server {
 
     location / {
         return 200 "Mou1ght - setting up SSL...";
-        add_header Content-Type text/plain;
     }
 }
 EOF
-```
-
-**2. 启动 Nginx 和 certbot 网络：**
-
-```bash
 docker compose -f docker-compose.prod.yaml up -d nginx
 ```
 
-**3. 申请证书：**
+**2. 签发证书（webroot 认证器会存进续签配置）：**
 
 ```bash
 docker compose -f docker-compose.prod.yaml run --rm certbot \
   certonly --webroot \
   -w /var/www/certbot \
-  -d blog.example.com \
+  -d 你的域名 \
   --email your@email.com \
-  --agree-tos \
-  --no-eff-email
+  --agree-tos --no-eff-email --non-interactive
 ```
 
-**4. 复制证书到 Nginx 目录：**
+**3. 恢复完整配置并启动全部服务：**
 
 ```bash
-docker compose -f docker-compose.prod.yaml run --rm certbot \
-  sh -c "cp /etc/letsencrypt/live/blog.example.com/fullchain.pem /etc/nginx/ssl/fullchain.pem && \
-         cp /etc/letsencrypt/live/blog.example.com/privkey.pem /etc/nginx/ssl/privkey.pem"
+mv /tmp/default.conf.bak nginx/conf.d/default.conf
+docker compose -f docker-compose.prod.yaml up -d
 ```
 
-**5. 恢复完整的 Nginx 配置：**
+**4. 之后无需任何手动操作**：证书由 compose 里的 certbot 服务自动续签。
 
-```bash
-sed -i 's/your-domain.com/blog.example.com/g' nginx/conf.d/default.conf
-```
-
-**6. 重启 Nginx：**
-
-```bash
-docker compose -f docker-compose.prod.yaml restart nginx
-```
-
-> Let's Encrypt 证书有效期 90 天。`docker-compose.prod.yaml` 中的 certbot 服务会每 12 小时检查续期，无需手动操作。
+> **自动续签机制**：certbot 服务每 12 小时检查一次，在证书到期前 30 天自动续签（Let's Encrypt 证书有效期 90 天，等于到期前自动换新）；nginx 每 12 小时重载一次，续签后的新证书会自动生效，全程零停机、无需手工干预。
+>
+> 前提：证书来自 ACME 协议 CA（Let's Encrypt / ZeroSSL 等）。如果是云厂商的非 ACME 免费证书（如阿里云/腾讯云，通常一年期），certbot 无法自动续签，请改用方式 B 或用厂商提供的 CLI/API 自动化。
 
 ### 方式 B：使用已有证书文件
 
-将你的证书文件放入 `nginx/ssl/` 目录：
+如果你的证书不是 ACME 协议（或想手动管理），把证书放到 nginx 配置引用的路径下：
 
 ```bash
-cp /path/to/your/fullchain.pem nginx/ssl/
-cp /path/to/your/privkey.pem nginx/ssl/
-chmod 600 nginx/ssl/*.pem
+mkdir -p nginx/certs/live/你的域名
+cp /path/to/fullchain.pem nginx/certs/live/你的域名/fullchain.pem
+cp /path/to/privkey.pem   nginx/certs/live/你的域名/privkey.pem
+chmod 600 nginx/certs/live/你的域名/*.pem
 ```
+
+> 方式 B 不会自动续期，证书到期前需要自己按厂商流程更换后替换这两个文件（nginx 每 12h 重载会自动加载新文件）。
 
 ## 第六步：启动所有服务
 
@@ -247,14 +241,17 @@ docker compose -f docker-compose.prod.yaml logs client
 ### SSL 证书错误
 
 ```bash
-# 检查证书文件是否存在
-ls -la nginx/ssl/
+# 检查证书文件是否存在（路径与 nginx 配置的 live 目录一致）
+ls -la nginx/certs/live/你的域名/
 
 # 检查证书是否过期
-openssl x509 -in nginx/ssl/fullchain.pem -noout -dates
+openssl x509 -in nginx/certs/live/你的域名/fullchain.pem -noout -dates
 
-# 强制续期
-docker compose -f docker-compose.prod.yaml run --rm certbot renew --force-renewal
+# 查看自动续签是否正常（每 12h 一次）
+docker compose -f docker-compose.prod.yaml logs certbot
+
+# 强制续期（手动触发）
+docker compose -f docker-compose.prod.yaml run --rm certbot renew --force-renewal --webroot -w /var/www/certbot
 ```
 
 ### 客户端无法连接 API
