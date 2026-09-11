@@ -25,7 +25,9 @@ blog:
         answer: ""
         need_reviewed: true
 database:
-    dsn: Mou1ght
+    # SQLite：库文件在 data/ 目录下（容器内对应 /app/data 卷，避免重建丢数据）；
+    # PostgreSQL：这里填 libpq 连接串（host=... dbname=...）
+    dsn: data/Mou1ght
     type: sqlite
 security:
     jwt_key: ""

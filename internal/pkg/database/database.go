@@ -14,9 +14,10 @@ import (
 )
 
 func initSqlite(dir string, name string) *gorm.DB {
-	_ = util.CreateDirNotExists(dir)
 	dsn := fmt.Sprintf("%s.db", name)
 	dsn = path.Join(dir, dsn)
+	// 确保库文件所在目录存在（如 data/Mou1ght.db 的 data/）
+	_ = util.CreateDirNotExists(path.Dir(dsn))
 	sdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		logger.Logger.Println(fmt.Sprintf("database connected err:%v", err))

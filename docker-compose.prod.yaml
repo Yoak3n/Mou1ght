@@ -26,9 +26,14 @@ services:
       dockerfile: Dockerfile
     expose:
       - "10420"
+    environment:
+      # 建议显式固定 JWT 密钥；留空则由后端生成并写回 config.yaml（需可写挂载）
+      - JWT_KEY=${JWT_KEY:-}
+      - VISITOR_JWT_KEY=${VISITOR_JWT_KEY:-}
     volumes:
       - mou1ght-data:/app/data
-      - ./config.yaml:/app/config.yaml:ro
+      # 去掉 :ro：后端会把生成的 JWT 密钥与站点设置写回 config.yaml（同一份文件，跨重启持久）
+      - ./config.yaml:/app/config.yaml
     restart: unless-stopped
 
   client:
@@ -39,7 +44,6 @@ services:
       - "3000"
     environment:
       - BASE_URL=http://backend:10420
-      - NEXT_PUBLIC_BASE_URL=http://backend:10420
       - REVALIDATE_SECRET=${REVALIDATE_SECRET:-please-change-me}
       # sitemap / RSS 等生成的公网地址，必须改成你的实际域名
       - SITE_URL=${SITE_URL:-https://your-domain.com}
