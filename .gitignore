@@ -8,3 +8,7 @@ adminui/
 !internal/service/router/adminui/
 !internal/service/router/adminui/.keep
 internal/service/router/adminui/dist/
+
+# 本地部署环境变量（密钥不入库，参考 .env.example）
+.env
+.env.local
