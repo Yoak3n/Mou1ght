@@ -13,6 +13,7 @@ type Configuration struct {
 	Blog     console.BlogSetting `yaml:"blog"`
 	Database DatabaseSetting     `yaml:"database"`
 	Security SecuritySetting     `yaml:"security"`
+	Client   ClientSetting       `yaml:"client"`
 }
 
 var config *Configuration
@@ -48,6 +49,7 @@ func DefaultConfig() *Configuration {
 		Blog:     console.DefaultBlogSetting(),
 		Database: DefaultDatabaseSetting(),
 		Security: DefaultSecuritySetting(),
+		Client:   DefaultClientSetting(),
 	}
 }
 
@@ -55,6 +57,7 @@ func createDefaultConfInFile() {
 	viper.Set("blog", console.DefaultBlogSetting())
 	viper.Set("database", DefaultDatabaseSetting())
 	viper.Set("security", DefaultSecuritySetting())
+	viper.Set("client", DefaultClientSetting())
 	err := viper.SafeWriteConfig()
 	if err != nil {
 		panic(err)
@@ -80,6 +83,7 @@ func UpdateConfig(c *Configuration) {
 	viper.Set("blog", c.Blog)
 	viper.Set("database", c.Database)
 	viper.Set("security", c.Security)
+	viper.Set("client", c.Client)
 	err := viper.WriteConfig()
 	if err != nil {
 		log.Printf("Failed to update config: %v", err)

@@ -3,6 +3,7 @@ package service
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
 	"errors"
@@ -25,7 +26,11 @@ func (s *CategoryService) CreateCategory(data request.CategoryRequest) error {
 	if data.Parent != "" {
 		record.ParentID = data.Parent
 	}
-	return s.categories.CreateCategory(record)
+	if err := s.categories.CreateCategory(record); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (s *CategoryService) UpdateCategory(categoryID string, data request.CategoryRequest) error {
@@ -39,14 +44,22 @@ func (s *CategoryService) UpdateCategory(categoryID string, data request.Categor
 	if data.Parent != "" {
 		record.ParentID = data.Parent
 	}
-	return s.categories.UpdateCategory(record)
+	if err := s.categories.UpdateCategory(record); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (s *CategoryService) DeleteCategory(categoryID string) error {
 	if categoryID == "" {
 		return errors.New("category id is empty")
 	}
-	return s.categories.DeleteCategory(categoryID)
+	if err := s.categories.DeleteCategory(categoryID); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (s *CategoryService) CategoryList() []table.CategoryTable {

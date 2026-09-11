@@ -3,6 +3,7 @@ package service
 import (
 	"Mou1ght/internal/config"
 	"Mou1ght/internal/domain/model/schema/console"
+	"Mou1ght/internal/notify"
 )
 
 func GetAllSetting() (map[string]any, error) {
@@ -19,5 +20,6 @@ func GetPublicBlogSetting() (console.PublicBlogSetting, error) {
 
 func UpdateBlogSetting(setting console.BlogSetting) error {
 	config.UpdateBlogSetting(setting)
+	notify.RevalidateClient()
 	return nil
 }

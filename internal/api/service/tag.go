@@ -4,6 +4,7 @@ import (
 	"Mou1ght/internal/domain/entity"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
 	"fmt"
@@ -25,7 +26,11 @@ func (t *TagService) CreateTag(req *request.CreateTagRequest) error {
 		ID:    util.GenTagID(),
 		Label: req.Label,
 	}
-	return t.tags.CreateTag(record)
+	if err := t.tags.CreateTag(record); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (t *TagService) UpdateTag(id string, req *request.UpdateTagRequest) error {
@@ -42,17 +47,25 @@ func (t *TagService) UpdateTag(id string, req *request.UpdateTagRequest) error {
 	if existing == nil || existing.ID == "" {
 		return fmt.Errorf("tag not found")
 	}
-	return t.tags.UpdateTag(&table.TagTable{
+	if err := t.tags.UpdateTag(&table.TagTable{
 		ID:    id,
 		Label: req.Label,
-	})
+	}); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (t *TagService) DeleteTag(id string) error {
 	if id == "" {
 		return fmt.Errorf("tag id is empty")
 	}
-	return t.tags.DeleteTagWithLink(id)
+	if err := t.tags.DeleteTagWithLink(id); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (t *TagService) TagsList() []entity.PostSign {

@@ -3,6 +3,7 @@ package service
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
 )
@@ -49,6 +50,7 @@ func (s *ArticleService) CreateArticle(req *request.CreateArticleRequest) error 
 	if err != nil {
 		return err
 	}
+	notify.RevalidateClient()
 	return nil
 }
 
@@ -82,6 +84,7 @@ func (s *ArticleService) UpdateArticle(req *request.UpdateArticleRequest) error 
 		return err
 	}
 
+	notify.RevalidateClient()
 	return nil
 }
 
@@ -108,7 +111,11 @@ func (s *ArticleService) DeleteArticleByID(id string) error {
 	if err := s.tags.DeleteTagLinkFromTarget(id, 1); err != nil {
 		return err
 	}
-	return s.categoryLinks.DeleteCategoryLinkByArticleID(id)
+	if err := s.categoryLinks.DeleteCategoryLinkByArticleID(id); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (s *ArticleService) GetArticlesByAuthorID(authorID string, descend bool) ([]table.ArticleTable, error) {

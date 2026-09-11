@@ -3,6 +3,7 @@ package service
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/repository/interfaces"
 	"errors"
 )
@@ -102,5 +103,9 @@ func (ps *PostService) UpdatePostStatus(req *request.UpdatePostStatusRequest) er
 	default:
 		return errors.New("invalid status")
 	}
-	return ps.posts.UpdatePostStatus(req.PostType, req.ID, status)
+	if err := ps.posts.UpdatePostStatus(req.PostType, req.ID, status); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }

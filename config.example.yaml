@@ -30,3 +30,9 @@ database:
 security:
     jwt_key: ""
     visitor_jwt_key: ""
+client:
+    # 前台 Next.js 的按需缓存失效 webhook；留空则不通知（前台靠 ISR 周期过期）。
+    # 生产环境（docker-compose）：http://client:3000/api/revalidate
+    revalidate_url: ""
+    # 与前台 REVALIDATE_SECRET 环境变量一致
+    revalidate_secret: ""

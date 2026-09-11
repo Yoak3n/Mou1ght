@@ -5,6 +5,7 @@ import (
 	"Mou1ght/internal/api/handler"
 	"Mou1ght/internal/api/service"
 	"Mou1ght/internal/config"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/repository/instance"
 	"Mou1ght/internal/service/router"
 	"Mou1ght/pkg/util"
@@ -16,6 +17,11 @@ func init() {
 }
 
 func runApp() {
+	// 前台缓存失效通知
+	clientSetting := config.GetConfig().Client
+	notify.Init(clientSetting.RevalidateURL, clientSetting.RevalidateSecret)
+	go notify.RevalidateOnStartup()
+
 	// 数据库连接
 	database := instance.NewDatabase()
 	postCounter := instance.NewPostCounter(database.GetCounter())

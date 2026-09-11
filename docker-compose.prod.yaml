@@ -40,6 +40,7 @@ services:
     environment:
       - BASE_URL=http://backend:10420
       - NEXT_PUBLIC_BASE_URL=http://backend:10420
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-please-change-me}
     depends_on:
       - backend
     restart: unless-stopped

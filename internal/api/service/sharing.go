@@ -3,6 +3,7 @@ package service
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
 	"errors"
@@ -52,6 +53,7 @@ func (s *SharingService) CreateSharing(req *request.CreateSharingRequest) error 
 	if err != nil {
 		return err
 	}
+	notify.RevalidateClient()
 	return nil
 }
 
@@ -98,6 +100,7 @@ func (s *SharingService) UpdateSharing(req *request.UpdateSharingRequest) error 
 	if err != nil {
 		return err
 	}
+	notify.RevalidateClient()
 	return nil
 }
 
@@ -127,6 +130,7 @@ func (s *SharingService) DeleteSharingByID(id string) error {
 	if err != nil {
 		return err
 	}
+	notify.RevalidateClient()
 	return nil
 }
 

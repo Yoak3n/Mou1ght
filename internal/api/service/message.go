@@ -4,6 +4,7 @@ import (
 	"Mou1ght/internal/config"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
 	"strings"
@@ -48,7 +49,11 @@ func (m *MessageService) CreateMessage(req *request.CreateMessageRequest) error 
 	} else {
 		record.Status = 1
 	}
-	return m.messages.CreateMessage(record)
+	if err := m.messages.CreateMessage(record); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (m *MessageService) UpdateMessage(req *request.UpdateMessageRequest) error {
@@ -77,7 +82,11 @@ func (m *MessageService) UpdateMessage(req *request.UpdateMessageRequest) error 
 		Y: req.Position.Y,
 		Z: req.Position.Z,
 	}
-	return m.messages.UpdateMessage(record)
+	if err := m.messages.UpdateMessage(record); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (m *MessageService) UpdateMessagePosition(req *request.UpdateMessagePositionRequest, isAdmin bool) error {
@@ -101,7 +110,11 @@ func (m *MessageService) GetMessageByID(id string) (*table.MessageTable, error) 
 }
 
 func (m *MessageService) DeleteMessageByID(id string) error {
-	return m.messages.DeleteMessageByID(id)
+	if err := m.messages.DeleteMessageByID(id); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
 }
 
 func (m *MessageService) ListMessages(dateRange *request.PostFilterDate, sort string, page, pageSize int) ([]*table.MessageTable, int64, error) {
