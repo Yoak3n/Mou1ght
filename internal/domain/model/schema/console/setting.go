@@ -30,7 +30,7 @@ func DefaultBlogSetting() BlogSetting {
 		Board: Board{
 			Question:     "",
 			Answer:       "",
-			NeedReviewed: false,
+			NeedReviewed: true,
 		},
 	}
 }

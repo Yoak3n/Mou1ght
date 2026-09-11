@@ -23,7 +23,7 @@ blog:
     board:
         question: ""
         answer: ""
-        need_reviewed: false
+        need_reviewed: true
 database:
     dsn: Mou1ght
     type: sqlite
