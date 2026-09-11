@@ -3,6 +3,7 @@ package instance
 import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/database"
+	"log"
 	"sync"
 	"time"
 
@@ -53,9 +54,12 @@ func (d *Database) applyCounterDelta(postType, id string, viewDelta, likeDelta i
 		updates["view"] = gorm.Expr("view + ?", viewDelta)
 	}
 	if likeDelta != 0 {
-		updates["like"] = gorm.Expr("like + ?", likeDelta)
+		// like 是 PostgreSQL 保留字，列名必须加引号，否则整条 UPDATE 失败导致计数丢失
+		updates["like"] = gorm.Expr("\"like\" + ?", likeDelta)
 	}
-	_ = d.DB.Model(model).Where("id = ? AND status = 1", id).Updates(updates).Error
+	if err := d.DB.Model(model).Where("id = ? AND status = 1", id).Updates(updates).Error; err != nil {
+		log.Printf("[counter] apply delta %s/%s failed: %v\n", postType, id, err)
+	}
 }
 
 func (d *Database) GetCounter() *counterBuffer {

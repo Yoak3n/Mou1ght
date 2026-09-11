@@ -148,3 +148,12 @@ func ParseVisitorToken(tokenString string) (*jwt.Token, *VisitorClaims, error) {
 	})
 	return token, claims, err
 }
+
+// ParseVisitorTokenID 校验游客 token 并返回其 jti（身份标识）；无效返回空字符串。
+func ParseVisitorTokenID(tokenString string) (string, error) {
+	token, claims, err := ParseVisitorToken(tokenString)
+	if err != nil || token == nil || !token.Valid {
+		return "", err
+	}
+	return claims.ID, nil
+}

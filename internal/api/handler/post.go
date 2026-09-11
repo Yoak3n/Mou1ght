@@ -7,6 +7,7 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -297,6 +298,18 @@ func (h *PostHandler) ViewPost(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
 	typ := c.Query("type", "article")
+	identity, _, tokenRequired := util.VisitorIdentity(c)
+	if tokenRequired {
+		// 浏览器流量（server action 转发）必须携带游客 token，否则所有访问者共享同一来源
+		return util.ErrorResponse(c, 403, "visitor token is required")
+	}
+	// 同一访问者同一内容 60 秒内只计一次浏览
+	if !util.Allow("view:cooldown:"+typ+":"+id+":"+identity, 1, time.Minute) {
+		return util.SuccessResponse(c, nil)
+	}
+	if !util.Allow("view:flood:"+identity, 120, time.Minute) {
+		return util.ErrorResponse(c, 429, "too many requests")
+	}
 	switch typ {
 	case "article":
 		err := h.articleService.ViewArticle(id)
@@ -326,6 +339,17 @@ func (h *PostHandler) LikePost(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
 	typ := c.Query("type", "article")
+	identity, _, tokenRequired := util.VisitorIdentity(c)
+	if tokenRequired {
+		return util.ErrorResponse(c, 403, "visitor token is required")
+	}
+	// 同一访问者同一内容 24 小时内最多计一次赞；已点过则幂等返回成功
+	if !util.Allow("like:dedup:"+typ+":"+id+":"+identity, 1, 24*time.Hour) {
+		return util.SuccessResponse(c, nil)
+	}
+	if !util.Allow("like:flood:"+identity, 30, time.Minute) {
+		return util.ErrorResponse(c, 429, "too many requests")
+	}
 	switch typ {
 	case "article":
 		err := h.articleService.LikeArticle(id)

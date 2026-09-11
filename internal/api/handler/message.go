@@ -7,6 +7,7 @@ import (
 	"Mou1ght/internal/pkg/util"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -55,6 +56,11 @@ func (h *MessageHandler) CreateMessage(c *fiber.Ctx) error {
 }
 
 func (h *MessageHandler) VisitorID(c *fiber.Ctx) error {
+	// 游客 token 铸造限流：浏览器经 server action 转发时共享同一来源 IP，
+	// 限流上限按全局并发访问量设置，防批量刷身份。
+	if !util.Allow("visitor:mint:"+util.ClientIP(c), 120, time.Minute) {
+		return util.ErrorResponse(c, 429, "too many requests")
+	}
 	ip := c.IP()
 	ua := c.Get("User-Agent")
 	id, err := util.ReleaseVisitorToken(ip, ua)
@@ -183,6 +189,16 @@ func (h *MessageHandler) ViewMessage(c *fiber.Ctx) error {
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
 	}
+	identity, _, tokenRequired := util.VisitorIdentity(c)
+	if tokenRequired {
+		return util.ErrorResponse(c, 403, "visitor token is required")
+	}
+	if !util.Allow("view:cooldown:message:"+id+":"+identity, 1, time.Minute) {
+		return util.SuccessResponse(c, nil)
+	}
+	if !util.Allow("view:flood:"+identity, 120, time.Minute) {
+		return util.ErrorResponse(c, 429, "too many requests")
+	}
 	err := h.messageService.ViewMessage(id)
 	if err != nil {
 		return util.ErrorResponse(c, 500, err.Error())
@@ -194,6 +210,16 @@ func (h *MessageHandler) LikeMessage(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return util.ErrorResponse(c, 400, "id is required")
+	}
+	identity, _, tokenRequired := util.VisitorIdentity(c)
+	if tokenRequired {
+		return util.ErrorResponse(c, 403, "visitor token is required")
+	}
+	if !util.Allow("like:dedup:message:"+id+":"+identity, 1, 24*time.Hour) {
+		return util.SuccessResponse(c, nil)
+	}
+	if !util.Allow("like:flood:"+identity, 30, time.Minute) {
+		return util.ErrorResponse(c, 429, "too many requests")
 	}
 	err := h.messageService.LikeMessage(id)
 	if err != nil {
