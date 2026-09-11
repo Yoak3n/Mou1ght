@@ -4,7 +4,6 @@ import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -23,7 +22,15 @@ func (m *MessageRepository) CreateMessage(msg *table.MessageTable) error {
 }
 
 func (m *MessageRepository) UpdateMessage(msg *table.MessageTable) error {
-	return m.db.Save(&msg).Error
+	return m.db.Model(&table.MessageTable{}).
+		Where("id = ?", msg.ID).
+		Updates(map[string]any{
+			"content": msg.Content,
+			"x":       msg.X,
+			"y":       msg.Y,
+			"z":       msg.Z,
+			"status":  msg.Status,
+		}).Error
 }
 
 func (m *MessageRepository) UpdateMessagePosition(id string, pos request.MessagePosition, authorIP string, isAdmin bool) error {
@@ -58,27 +65,38 @@ func (m *MessageRepository) DeleteMessageByID(id string) error {
 	return m.db.Where("id = ?", id).Delete(&table.MessageTable{}).Error
 }
 
-func (m *MessageRepository) GetMessages(startDate, endDate *time.Time) ([]*table.MessageTable, error) {
+func (m *MessageRepository) GetMessages(opts request.ListOptions) ([]*table.MessageTable, int64, error) {
 	msgs := make([]*table.MessageTable, 0)
-	var query *gorm.DB
-	if startDate != nil {
-		if endDate == nil {
-			query = m.db.Where("created_at >= ?", startDate)
-		} else {
-			query = m.db.Where("created_at BETWEEN ? AND ?", startDate, endDate)
-		}
-	} else {
-		if endDate == nil {
-			query = m.db
-		} else {
-			query = m.db.Where("created_at <= ?", endDate)
-		}
+	query := m.db.Model(&table.MessageTable{})
+	switch {
+	case opts.StartDate != nil && opts.EndDate != nil:
+		query = query.Where("created_at BETWEEN ? AND ?", opts.StartDate, opts.EndDate)
+	case opts.StartDate != nil:
+		query = query.Where("created_at >= ?", opts.StartDate)
+	case opts.EndDate != nil:
+		query = query.Where("created_at <= ?", opts.EndDate)
 	}
-	err := query.Order("created_at DESC").Find(&msgs).Error
-	if err != nil {
-		return nil, err
+	if opts.OnlyPublished {
+		query = query.Where("status = ?", 1)
 	}
-	return msgs, nil
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	order := "created_at DESC"
+	if opts.AscendingOrder {
+		order = "created_at ASC"
+	}
+	query = query.Order(order)
+	if opts.Paginated() {
+		query = query.Offset(opts.Offset()).Limit(opts.PageSize)
+	}
+	if err := query.Find(&msgs).Error; err != nil {
+		return nil, 0, err
+	}
+	return msgs, total, nil
 }
 
 func (m *MessageRepository) GetOwnedMessageIDs(authorIP string) ([]string, error) {

@@ -48,3 +48,7 @@ func (r *AttachmentRepository) ListAttachments() ([]table.AttachmentTable, error
 	err := r.db.Order("created_at DESC").Find(&attachments).Error
 	return attachments, err
 }
+
+func (r *AttachmentRepository) DeleteAttachment(id string) error {
+	return r.db.Where("id = ?", id).Delete(&table.AttachmentTable{}).Error
+}

@@ -1,8 +1,8 @@
 package interfaces
 
 import (
+	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
-	"time"
 )
 
 type ArticleRepository interface {
@@ -14,5 +14,5 @@ type ArticleRepository interface {
 	DeleteArticleByID(id string) error
 	GetArticlesByAuthorID(authorID string, desc bool) ([]table.ArticleTable, error)
 	GetArticlesByAuthorIDs(ids []string, desc bool) ([]*table.ArticleTable, error)
-	GetArticles(startDate, endDate *time.Time) ([]*table.ArticleTable, error)
+	GetArticles(opts request.ListOptions) ([]*table.ArticleTable, int64, error)
 }

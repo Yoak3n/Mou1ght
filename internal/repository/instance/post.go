@@ -31,8 +31,8 @@ func (p *PostRepository) UpdatePostStatus(postType string, id string, status int
 	default:
 		return errors.New("invalid post type")
 	}
-	if status < 0 || status > 2 {
-		return errors.New("status must be 0, 1, or 2")
+	if status < 0 || status > 3 {
+		return errors.New("status must be 0, 1, 2, or 3")
 	}
 
 	result := p.db.Table(tableName).Where("id = ?", id).Update("status", status)

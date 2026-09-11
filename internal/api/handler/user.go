@@ -79,3 +79,48 @@ func (u *UserHandler) Logout(c *fiber.Ctx) error {
 	}
 	return util.SuccessResponse(c, nil)
 }
+
+func (u *UserHandler) UpdateProfile(c *fiber.Ctx) error {
+	userId := c.Locals("uid").(string)
+	if userId == "" {
+		return util.ErrorResponse(c, 401, "Unauthorized")
+	}
+	req := &request.UpdateUserProfileRequest{}
+	if err := c.BodyParser(req); err != nil {
+		return util.ErrorResponse(c, 400, err.Error())
+	}
+	info, err := u.userSvc.UpdateProfile(userId, req)
+	if err != nil {
+		msg := err.Error()
+		if msg == "user name already exists" {
+			return util.ErrorResponse(c, 409, msg)
+		}
+		return util.ErrorResponse(c, 400, msg)
+	}
+	return util.SuccessResponse(c, fiber.Map{"user": info})
+}
+
+func (u *UserHandler) ChangePassword(c *fiber.Ctx) error {
+	userId := c.Locals("uid").(string)
+	if userId == "" {
+		return util.ErrorResponse(c, 401, "Unauthorized")
+	}
+	req := &request.ChangePasswordRequest{}
+	if err := c.BodyParser(req); err != nil {
+		return util.ErrorResponse(c, 400, err.Error())
+	}
+	if len(req.NewPassword) < 6 {
+		return util.ErrorResponse(c, 400, "password length must be greater than 6")
+	}
+	if req.OldPassword == "" {
+		return util.ErrorResponse(c, 400, "old_password is required")
+	}
+	if err := u.userSvc.ChangePassword(userId, req); err != nil {
+		msg := err.Error()
+		if msg == "old password incorrect" {
+			return util.ErrorResponse(c, 401, msg)
+		}
+		return util.ErrorResponse(c, 400, msg)
+	}
+	return util.SuccessResponse(c, nil, "Change password successfully")
+}

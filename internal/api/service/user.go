@@ -84,6 +84,67 @@ func (s *UserService) UserInfo(uid string) (*entity.UserEntity, error) {
 	return entity.NewUserEntityFromTable(record, true), nil
 }
 
+func (s *UserService) UpdateProfile(uid string, req *request.UpdateUserProfileRequest) (*entity.UserEntity, error) {
+	if uid == "" {
+		return nil, errors.New("uid is required")
+	}
+	user, err := s.users.GetUser(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	fields := make(map[string]any)
+	if req.UserName != "" && req.UserName != user.UserName {
+		if _, err := s.users.GetUserByName(req.UserName); err == nil {
+			return nil, errors.New("user name already exists")
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		fields["user_name"] = req.UserName
+	}
+	if req.Email != user.Email {
+		fields["email"] = req.Email
+	}
+	if req.Phone != user.Phone {
+		fields["phone"] = req.Phone
+	}
+	if req.Avatar != user.Avatar {
+		fields["avatar"] = req.Avatar
+	}
+	if len(fields) == 0 {
+		return entity.NewUserEntityFromTable(user, true), nil
+	}
+	if err := s.users.UpdateUserProfile(uid, fields); err != nil {
+		return nil, err
+	}
+	updated, err := s.users.GetUser(uid)
+	if err != nil {
+		return nil, err
+	}
+	return entity.NewUserEntityFromTable(updated, true), nil
+}
+
+func (s *UserService) ChangePassword(uid string, req *request.ChangePasswordRequest) error {
+	if uid == "" {
+		return errors.New("uid is required")
+	}
+	user, err := s.users.GetUser(uid)
+	if err != nil {
+		return err
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.OldPassword)); err != nil {
+		return errors.New("old password incorrect")
+	}
+	if req.NewPassword == req.OldPassword {
+		return errors.New("new password must differ from old password")
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	return s.users.UpdateUserPassword(uid, string(hashed))
+}
+
 func (s *UserService) AuthorListWithPost(req *request.PostListRequest) []table.UserTable {
 	authors, err := s.users.QueryUsers(req.Data.Keyword)
 	if err != nil {

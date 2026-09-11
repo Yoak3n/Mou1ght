@@ -46,3 +46,9 @@ func (r *AttachmentLinkRepository) GetAttachmentIDsBySharingID(sharingID string)
 	err := r.db.Where("sharing_id = ?", sharingID).Order("sort ASC").Model(&table.AttachmentLinkTable{}).Pluck("attachment_id", &ids).Error
 	return ids, err
 }
+
+func (r *AttachmentLinkRepository) CountByAttachmentID(attachmentID string) (int64, error) {
+	var count int64
+	err := r.db.Model(&table.AttachmentLinkTable{}).Where("attachment_id = ?", attachmentID).Count(&count).Error
+	return count, err
+}

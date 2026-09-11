@@ -39,6 +39,21 @@ func (th *TagHandler) DeleteTag(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, nil)
 }
 
+func (th *TagHandler) UpdateTag(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return util.ErrorResponse(c, 400, "id is required")
+	}
+	var req request.UpdateTagRequest
+	if err := c.BodyParser(&req); err != nil {
+		return util.ErrorResponse(c, 400, "请求参数错误")
+	}
+	if err := th.tagServ.UpdateTag(id, &req); err != nil {
+		return util.ErrorResponse(c, 400, fmt.Sprintf("更新标签失败: %s", err.Error()))
+	}
+	return util.SuccessResponse(c, nil)
+}
+
 func (th *TagHandler) GetAllTags(c *fiber.Ctx) error {
 	tags := th.tagServ.TagsList()
 	if tags == nil {

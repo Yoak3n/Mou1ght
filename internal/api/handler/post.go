@@ -6,7 +6,6 @@ import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -150,12 +149,15 @@ func (h *PostHandler) returnMap(res *service.PostResult) map[string]any {
 	}
 	if res.Sharings != nil {
 		resultMap["sharings"] = h.dtoService.GetSharingsEntityFromTables(res.Sharings)
-
 	}
 	if res.Messages != nil {
 		resultMap["messages"] = h.dtoService.GetMessagesEntityFromTables(res.Messages)
 	}
-	log.Println(resultMap)
+	resultMap["total"] = res.Total
+	if res.Page > 0 && res.PageSize > 0 {
+		resultMap["page"] = res.Page
+		resultMap["page_size"] = res.PageSize
+	}
 	return resultMap
 }
 
@@ -222,7 +224,6 @@ func (h *PostHandler) ListPost(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
 	resultMap := make(map[string]any)
-	// 除all外暂时未支持date_range，看需求是否需要
 	switch req.Filter.Typ {
 	case "category":
 		cm, links := h.categoryService.CategoryListWithArticle(req)
@@ -252,6 +253,7 @@ func (h *PostHandler) ListPostPublic(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
+	req.Filter.OnlyPublished = true
 	resultMap := make(map[string]any)
 	switch req.Filter.Typ {
 	case "category":

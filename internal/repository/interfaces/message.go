@@ -3,7 +3,6 @@ package interfaces
 import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
-	"time"
 )
 
 type MessageRepository interface {
@@ -14,6 +13,6 @@ type MessageRepository interface {
 	AddLikeCountMessage(id string) error
 	GetMessageByID(id string) (*table.MessageTable, error)
 	DeleteMessageByID(id string) error
-	GetMessages(startDate, endDate *time.Time) ([]*table.MessageTable, error)
+	GetMessages(opts request.ListOptions) ([]*table.MessageTable, int64, error)
 	GetOwnedMessageIDs(authorIP string) ([]string, error)
 }

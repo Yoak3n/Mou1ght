@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Mou1ght/internal/api/service"
-	"Mou1ght/internal/domain/entity"
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
@@ -147,17 +146,15 @@ func (h *MessageHandler) ListMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	var result map[string]any
-	if req.DateRange == nil {
-		msgs, err := h.messageService.ListMessages(nil, req.Sort)
-		if err == nil {
-			result = h.messages(msgs)
-		}
-	} else {
-		msgs, err := h.messageService.ListMessages(req.DateRange, req.Sort)
-		if err == nil {
-			result = h.messages(msgs)
-		}
+	msgs, total, err := h.messageService.ListMessages(req.DateRange, req.Sort, req.Page, req.PageSize)
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	result := h.messages(msgs)
+	result["total"] = total
+	if req.Page > 0 && req.PageSize > 0 {
+		result["page"] = req.Page
+		result["page_size"] = req.PageSize
 	}
 	return util.SuccessResponse(c, result)
 }
@@ -168,28 +165,16 @@ func (h *MessageHandler) ListMessagePublic(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
-	result := make(map[string]any)
-	var msgs []*entity.MessageEntity
-	if req.DateRange == nil {
-		ms, err := h.messageService.ListMessages(nil, req.Sort)
-		if err != nil {
-			return util.ErrorResponse(c, 500, err.Error())
-		}
-		msgs = h.dtoService.GetMessagesEntityFromTables(ms)
-	} else {
-		ms, err := h.messageService.ListMessages(req.DateRange, req.Sort)
-		if err != nil {
-			return util.ErrorResponse(c, 500, err.Error())
-		}
-		msgs = h.dtoService.GetMessagesEntityFromTables(ms)
+	ms, total, err := h.messageService.ListMessagesPublic(req.DateRange, req.Sort, req.Page, req.PageSize)
+	if err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
 	}
-	filtered := make([]*entity.MessageEntity, 0, len(msgs))
-	for _, m := range msgs {
-		if m != nil && m.State.Status == "published" {
-			filtered = append(filtered, m)
-		}
+	result := h.messages(ms)
+	result["total"] = total
+	if req.Page > 0 && req.PageSize > 0 {
+		result["page"] = req.Page
+		result["page_size"] = req.PageSize
 	}
-	result["messages"] = filtered
 	return util.SuccessResponse(c, result)
 }
 

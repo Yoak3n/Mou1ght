@@ -56,17 +56,33 @@ func (s *SharingService) CreateSharing(req *request.CreateSharingRequest) error 
 }
 
 func (s *SharingService) UpdateSharing(req *request.UpdateSharingRequest) error {
+	existing, err := s.sharings.GetSharingByID(req.ID)
+	if err != nil {
+		return err
+	}
+	if existing == nil || existing.ID == "" {
+		return errors.New("sharing not found")
+	}
+
+	// private -> draft(0); otherwise only revive draft, keep archive as-is
+	status := existing.Status
+	if req.Private {
+		status = 0
+	} else if status == 0 {
+		status = 1
+	}
 	record := &table.SharingTable{
 		PostBase: table.PostBase{
 			ID:      req.ID,
 			Content: req.Content,
+			Status:  status,
 		},
 		AuthorID: req.Author,
 	}
 	if err := s.validateAttachmentIDs(req.AttachmentIDs); err != nil {
 		return err
 	}
-	err := s.sharings.UpdateSharing(record)
+	err = s.sharings.UpdateSharing(record)
 	if err != nil {
 		return err
 	}

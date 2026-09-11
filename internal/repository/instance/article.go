@@ -1,9 +1,9 @@
 package instance
 
 import (
+	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,7 +25,13 @@ func (a *ArticleRepository) CreateArticle(article *table.ArticleTable) error {
 }
 
 func (a *ArticleRepository) UpdateArticle(article *table.ArticleTable) error {
-	return a.db.Save(article).Error
+	return a.db.Model(&table.ArticleTable{}).
+		Where("id = ?", article.ID).
+		Updates(map[string]any{
+			"title":     article.Title,
+			"content":   article.Content,
+			"author_id": article.AuthorID,
+		}).Error
 }
 
 func (a *ArticleRepository) AddViewCountArticle(id string) error {
@@ -78,25 +84,36 @@ func (a *ArticleRepository) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*
 	return articles, nil
 }
 
-func (a *ArticleRepository) GetArticles(startDate, endDate *time.Time) ([]*table.ArticleTable, error) {
+func (a *ArticleRepository) GetArticles(opts request.ListOptions) ([]*table.ArticleTable, int64, error) {
 	articles := make([]*table.ArticleTable, 0)
-	var query *gorm.DB
-	if startDate != nil {
-		if endDate == nil {
-			query = a.db.Where("created_at >= ?", startDate)
-		} else {
-			query = a.db.Where("created_at BETWEEN ? AND ?", startDate, endDate)
-		}
-	} else {
-		if endDate == nil {
-			query = a.db
-		} else {
-			query = a.db.Where("created_at <= ?", endDate)
-		}
+	query := a.db.Model(&table.ArticleTable{})
+	switch {
+	case opts.StartDate != nil && opts.EndDate != nil:
+		query = query.Where("created_at BETWEEN ? AND ?", opts.StartDate, opts.EndDate)
+	case opts.StartDate != nil:
+		query = query.Where("created_at >= ?", opts.StartDate)
+	case opts.EndDate != nil:
+		query = query.Where("created_at <= ?", opts.EndDate)
 	}
-	err := query.Order("created_at DESC").Find(&articles).Error
-	if err != nil {
-		return nil, err
+	if opts.OnlyPublished {
+		query = query.Where("status = ?", 1)
 	}
-	return articles, nil
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	order := "created_at DESC"
+	if opts.AscendingOrder {
+		order = "created_at ASC"
+	}
+	query = query.Order(order)
+	if opts.Paginated() {
+		query = query.Offset(opts.Offset()).Limit(opts.PageSize)
+	}
+	if err := query.Find(&articles).Error; err != nil {
+		return nil, 0, err
+	}
+	return articles, total, nil
 }

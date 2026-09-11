@@ -48,6 +48,18 @@ func (d *UserRepository) CountUsers() (int64, error) {
 func (d *UserRepository) UpdateUser(user *table.UserTable) error {
 	return d.db.Save(user).Error
 }
+
+func (d *UserRepository) UpdateUserProfile(id string, fields map[string]any) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	return d.db.Model(&table.UserTable{}).Where("id = ?", id).Updates(fields).Error
+}
+
+func (d *UserRepository) UpdateUserPassword(id, hashedPassword string) error {
+	return d.db.Model(&table.UserTable{}).Where("id = ?", id).Update("password", hashedPassword).Error
+}
+
 func (d *UserRepository) DeleteUser(user *table.UserTable) error {
 	return d.db.Delete(user).Error
 }

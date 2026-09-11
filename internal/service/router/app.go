@@ -13,6 +13,8 @@ func setupUserRouter(r fiber.Router, userHandler *handler.UserHandler) {
 	user.Post("/login", userHandler.Login)
 	user.Use(middleware.Auth).Get("/info", userHandler.Info)
 	user.Use(middleware.Auth).Post("/logout", userHandler.Logout)
+	user.Use(middleware.Auth).Put("/profile", userHandler.UpdateProfile)
+	user.Use(middleware.Auth).Put("/password", userHandler.ChangePassword)
 }
 
 func setupSettingRouter(r fiber.Router) {
@@ -27,4 +29,5 @@ func setupAttachmentRouter(r fiber.Router, attachmentHandler *handler.Attachment
 	attachment := r.Group("/attachment")
 	attachment.Use(middleware.Auth).Post("/upload", attachmentHandler.UploadAttachment)
 	attachment.Use(middleware.Auth).Get("/list", attachmentHandler.GetAttachmentList)
+	attachment.Use(middleware.Auth).Delete("/delete/:id", attachmentHandler.DeleteAttachment)
 }

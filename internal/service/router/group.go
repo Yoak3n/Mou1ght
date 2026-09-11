@@ -10,6 +10,7 @@ import (
 func setupTagRouter(r fiber.Router, tagHandler *handler.TagHandler) {
 	tag := r.Group("/tag")
 	tag.Post("/create", middleware.Auth, tagHandler.CreateTag)
+	tag.Put("/update/:id", middleware.Auth, tagHandler.UpdateTag)
 	tag.Delete("/delete/:id", middleware.Auth, tagHandler.DeleteTag)
 	tag.Get("/all", tagHandler.GetAllTags)
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"Mou1ght/internal/api/service"
 	"Mou1ght/internal/pkg/util"
+	"errors"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -39,4 +40,22 @@ func (h *AttachmentHandler) UploadAttachment(c *fiber.Ctx) error {
 	return util.SuccessResponse(c, fiber.Map{
 		"attachments": attachments,
 	}, "")
+}
+
+func (h *AttachmentHandler) DeleteAttachment(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return util.ErrorResponse(c, 400, service.ErrAttachmentIDRequired.Error())
+	}
+	if err := h.attachmentService.Delete(id); err != nil {
+		switch {
+		case errors.Is(err, service.ErrAttachmentNotFound):
+			return util.ErrorResponse(c, 404, err.Error())
+		case errors.Is(err, service.ErrAttachmentInUse):
+			return util.ErrorResponse(c, 409, err.Error())
+		default:
+			return util.ErrorResponse(c, 500, err.Error())
+		}
+	}
+	return util.SuccessResponse(c, nil, "Delete attachment successfully")
 }

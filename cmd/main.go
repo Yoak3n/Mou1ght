@@ -40,7 +40,7 @@ func runApp() {
 	tagService := service.NewTagService(tagRepository)
 	categoryService := service.NewCategoryService(categoryRepository, categoryLinkRepository)
 	postService := service.NewPostService(articleRepository, sharingRepository, messageRepository, postRepository)
-	attachmentService := service.NewAttachmentService(attachmentRepository)
+	attachmentService := service.NewAttachmentService(attachmentRepository, attachmentLinkRepository)
 
 	deps := router.Deps{
 		UserHandler:       handler.NewUserHandler(userService),

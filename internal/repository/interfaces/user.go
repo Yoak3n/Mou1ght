@@ -9,5 +9,7 @@ type UserRepository interface {
 	QueryUsers(username []string) ([]table.UserTable, error)
 	CountUsers() (int64, error)
 	UpdateUser(user *table.UserTable) error
+	UpdateUserProfile(id string, fields map[string]any) error
+	UpdateUserPassword(id, hashedPassword string) error
 	DeleteUser(user *table.UserTable) error
 }

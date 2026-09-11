@@ -102,19 +102,13 @@ func (s *ArticleService) GetArticleByID(id string) (*table.ArticleTable, error) 
 }
 
 func (s *ArticleService) DeleteArticleByID(id string) error {
-	err := s.articles.DeleteArticleByID(id)
-	if err != nil {
+	if err := s.articles.DeleteArticleByID(id); err != nil {
 		return err
 	}
-	err = s.tags.DeleteTagLinkFromTarget(id, 1)
-	if err != nil {
+	if err := s.tags.DeleteTagLinkFromTarget(id, 1); err != nil {
 		return err
 	}
-	err = s.articles.DeleteArticleByID(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.categoryLinks.DeleteCategoryLinkByArticleID(id)
 }
 
 func (s *ArticleService) GetArticlesByAuthorID(authorID string, descend bool) ([]table.ArticleTable, error) {

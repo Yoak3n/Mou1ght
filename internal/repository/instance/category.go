@@ -19,7 +19,12 @@ func (c *CategoryRepository) CreateCategory(category *table.CategoryTable) error
 }
 
 func (c *CategoryRepository) UpdateCategory(category *table.CategoryTable) error {
-	return c.db.Save(category).Error
+	return c.db.Model(&table.CategoryTable{}).
+		Where("id = ?", category.ID).
+		Updates(map[string]any{
+			"label":     category.Label,
+			"parent_id": category.ParentID,
+		}).Error
 }
 
 func (c *CategoryRepository) DeleteCategory(id string) error {

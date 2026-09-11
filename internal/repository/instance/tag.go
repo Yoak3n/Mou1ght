@@ -48,7 +48,9 @@ func (t *TagRepository) GetTagsByID(ids []string) ([]table.TagTable, error) {
 
 // UpdateTag 更新标签
 func (t *TagRepository) UpdateTag(tag *table.TagTable) error {
-	return t.db.Save(tag).Error
+	return t.db.Model(&table.TagTable{}).
+		Where("id = ?", tag.ID).
+		Update("label", tag.Label).Error
 }
 
 // UpdateTargetLinks 更新目标的标签链接

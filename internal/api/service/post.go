@@ -5,7 +5,6 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
 	"errors"
-	"time"
 )
 
 type PostService struct {
@@ -19,6 +18,9 @@ type PostResult struct {
 	Articles []*table.ArticleTable
 	Sharings []*table.SharingTable
 	Messages []*table.MessageTable
+	Total    int64
+	Page     int
+	PageSize int
 }
 
 func NewPostService(articles interfaces.ArticleRepository, sharings interfaces.SharingRepository, messages interfaces.MessageRepository, posts interfaces.PostRepository) *PostService {
@@ -30,45 +32,56 @@ func (ps *PostService) SingleListWithPost(req *request.PostListRequest, typ stri
 }
 
 func (ps *PostService) queryPost(req *request.PostListRequest, typ string) *PostResult {
-	ret := &PostResult{}
-	var startDate, endDate *time.Time
-	if req.Filter.DateRange != nil {
-		if req.Filter.DateRange.StartDate != "" {
-			if sd, err := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.StartDate); err == nil {
-				startDate = &sd
-			}
-		}
-		if req.Filter.DateRange.EndDate != "" {
-			if ed, err := time.Parse("2006-01-02 15:04:05", req.Filter.DateRange.EndDate); err == nil {
-				endDate = &ed
-			}
-		}
+	opts := request.NewListOptions(req.Filter)
+	ret := &PostResult{
+		Page:     opts.Page,
+		PageSize: opts.PageSize,
 	}
 	switch typ {
 	case "article":
-		articles, err := ps.articles.GetArticles(startDate, endDate)
+		articles, total, err := ps.articles.GetArticles(opts)
 		if err == nil {
 			ret.Articles = articles
+			ret.Total = total
 		}
 	case "sharing":
-		sharings, err := ps.sharings.GetSharings(startDate, endDate)
+		sharings, total, err := ps.sharings.GetSharings(opts)
 		if err == nil {
 			ret.Sharings = sharings
+			ret.Total = total
 		}
 	case "message":
-		messages, err := ps.messages.GetMessages(startDate, endDate)
+		messages, total, err := ps.messages.GetMessages(opts)
 		if err == nil {
 			ret.Messages = messages
+			ret.Total = total
 		}
 	}
 	return ret
 }
 
 func (ps *PostService) AllListWithPost(req *request.PostListRequest) *PostResult {
-	ret := &PostResult{}
-	ret.Articles = ps.queryPost(req, "article").Articles
-	ret.Sharings = ps.queryPost(req, "sharing").Sharings
-	ret.Messages = ps.queryPost(req, "message").Messages
+	opts := request.NewListOptions(req.Filter)
+	ret := &PostResult{
+		Page:     opts.Page,
+		PageSize: opts.PageSize,
+	}
+
+	articles, articleTotal, err := ps.articles.GetArticles(opts)
+	if err == nil {
+		ret.Articles = articles
+		ret.Total += articleTotal
+	}
+	sharings, sharingTotal, err := ps.sharings.GetSharings(opts)
+	if err == nil {
+		ret.Sharings = sharings
+		ret.Total += sharingTotal
+	}
+	messages, messageTotal, err := ps.messages.GetMessages(opts)
+	if err == nil {
+		ret.Messages = messages
+		ret.Total += messageTotal
+	}
 	return ret
 }
 
@@ -81,9 +94,11 @@ func (ps *PostService) UpdatePostStatus(req *request.UpdatePostStatusRequest) er
 		status = 1
 	case "archive":
 		status = 2
-	// pending only for message
-	// case "pending":
-	// 	status = 3
+	case "pending":
+		if req.PostType != "message" {
+			return errors.New("pending is only allowed for message")
+		}
+		status = 3
 	default:
 		return errors.New("invalid status")
 	}

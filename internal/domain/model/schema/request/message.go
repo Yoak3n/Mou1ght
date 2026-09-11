@@ -21,6 +21,8 @@ type UpdateMessageRequest struct {
 type MessageListRequest struct {
 	Sort      string          `json:"sort"`
 	DateRange *PostFilterDate `json:"date_range"`
+	Page      int             `json:"page,omitempty"`
+	PageSize  int             `json:"page_size,omitempty"`
 }
 
 type UpdateMessagePositionRequest struct {

@@ -18,11 +18,34 @@ func NewTagService(tags interfaces.TagRepository) *TagService {
 }
 
 func (t *TagService) CreateTag(req *request.CreateTagRequest) error {
+	if req == nil || req.Label == "" {
+		return fmt.Errorf("tag label is empty")
+	}
 	record := &table.TagTable{
 		ID:    util.GenTagID(),
 		Label: req.Label,
 	}
 	return t.tags.CreateTag(record)
+}
+
+func (t *TagService) UpdateTag(id string, req *request.UpdateTagRequest) error {
+	if id == "" {
+		return fmt.Errorf("tag id is empty")
+	}
+	if req == nil || req.Label == "" {
+		return fmt.Errorf("tag label is empty")
+	}
+	existing, err := t.tags.GetTagByID(id)
+	if err != nil {
+		return err
+	}
+	if existing == nil || existing.ID == "" {
+		return fmt.Errorf("tag not found")
+	}
+	return t.tags.UpdateTag(&table.TagTable{
+		ID:    id,
+		Label: req.Label,
+	})
 }
 
 func (t *TagService) DeleteTag(id string) error {

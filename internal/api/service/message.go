@@ -52,20 +52,30 @@ func (m *MessageService) CreateMessage(req *request.CreateMessageRequest) error 
 }
 
 func (m *MessageService) UpdateMessage(req *request.UpdateMessageRequest) error {
+	existing, err := m.messages.GetMessageByID(req.ID)
+	if err != nil {
+		return err
+	}
+	if existing == nil || existing.ID == "" {
+		return fiber.NewError(404, "message not found")
+	}
+	if existing.AuthorIP != req.AuthorIP {
+		return fiber.NewError(403, "Forbidden")
+	}
+
+	status := existing.Status
+	if config.GetConfig().Blog.Board.NeedReviewed {
+		status = 3
+	}
 	record := &table.MessageTable{
 		PostBase: table.PostBase{
 			ID:      req.ID,
 			Content: req.Content,
+			Status:  status,
 		},
-		X:        req.Position.X,
-		Y:        req.Position.Y,
-		Z:        req.Position.Z,
-		AuthorIP: req.AuthorIP,
-	}
-	if config.GetConfig().Blog.Board.NeedReviewed {
-		record.Status = 3
-	} else {
-		record.Status = 1
+		X: req.Position.X,
+		Y: req.Position.Y,
+		Z: req.Position.Z,
 	}
 	return m.messages.UpdateMessage(record)
 }
@@ -94,24 +104,47 @@ func (m *MessageService) DeleteMessageByID(id string) error {
 	return m.messages.DeleteMessageByID(id)
 }
 
-func (m *MessageService) ListMessages(dateRange *request.PostFilterDate, sort string) ([]*table.MessageTable, error) {
-	var startDate, endDate *time.Time
+func (m *MessageService) ListMessages(dateRange *request.PostFilterDate, sort string, page, pageSize int) ([]*table.MessageTable, int64, error) {
+	opts := request.ListOptions{
+		Page:           page,
+		PageSize:       pageSize,
+		AscendingOrder: sort == "asc",
+	}
 	if dateRange != nil {
-		s, _ := time.Parse("2006-01-02 15:04:05", dateRange.StartDate)
-		e, _ := time.Parse("2006-01-02 15:04:05", dateRange.EndDate)
-		startDate = &s
-		endDate = &e
-	}
-	msgs, err := m.messages.GetMessages(startDate, endDate)
-	if err != nil {
-		return nil, err
-	}
-	if sort == "desc" {
-		for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
-			msgs[i], msgs[j] = msgs[j], msgs[i]
+		if dateRange.StartDate != "" {
+			if s, err := time.Parse("2006-01-02 15:04:05", dateRange.StartDate); err == nil {
+				opts.StartDate = &s
+			}
+		}
+		if dateRange.EndDate != "" {
+			if e, err := time.Parse("2006-01-02 15:04:05", dateRange.EndDate); err == nil {
+				opts.EndDate = &e
+			}
 		}
 	}
-	return msgs, nil
+	return m.messages.GetMessages(opts)
+}
+
+func (m *MessageService) ListMessagesPublic(dateRange *request.PostFilterDate, sort string, page, pageSize int) ([]*table.MessageTable, int64, error) {
+	opts := request.ListOptions{
+		Page:           page,
+		PageSize:       pageSize,
+		AscendingOrder: sort == "asc",
+		OnlyPublished:  true,
+	}
+	if dateRange != nil {
+		if dateRange.StartDate != "" {
+			if s, err := time.Parse("2006-01-02 15:04:05", dateRange.StartDate); err == nil {
+				opts.StartDate = &s
+			}
+		}
+		if dateRange.EndDate != "" {
+			if e, err := time.Parse("2006-01-02 15:04:05", dateRange.EndDate); err == nil {
+				opts.EndDate = &e
+			}
+		}
+	}
+	return m.messages.GetMessages(opts)
 }
 
 func (m *MessageService) GetOwnedMessageIDs(jti string) ([]string, error) {

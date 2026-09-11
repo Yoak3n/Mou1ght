@@ -21,10 +21,11 @@ import (
 
 type AttachmentService struct {
 	attachments interfaces.AttachmentRepository
+	links       interfaces.SharingAttachmentLinkRepository
 }
 
-func NewAttachmentService(attachments interfaces.AttachmentRepository) *AttachmentService {
-	return &AttachmentService{attachments: attachments}
+func NewAttachmentService(attachments interfaces.AttachmentRepository, links interfaces.SharingAttachmentLinkRepository) *AttachmentService {
+	return &AttachmentService{attachments: attachments, links: links}
 }
 
 func (s *AttachmentService) Upload(files []*multipart.FileHeader) ([]entity.AttachmentEntity, error) {

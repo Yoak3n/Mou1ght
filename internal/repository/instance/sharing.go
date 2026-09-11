@@ -1,10 +1,9 @@
 package instance
 
 import (
+	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
-	"log"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -34,28 +33,38 @@ func (s *SharingRepository) GetSharingsByAuthorID(authorID string, desc bool) ([
 	return sharings, nil
 }
 
-func (s *SharingRepository) GetSharings(startDate, endDate *time.Time) ([]*table.SharingTable, error) {
+func (s *SharingRepository) GetSharings(opts request.ListOptions) ([]*table.SharingTable, int64, error) {
 	sharings := make([]*table.SharingTable, 0)
-	var query *gorm.DB
-	if startDate != nil {
-		if endDate == nil {
-			query = s.db.Model(&table.SharingTable{}).Where("created_at >= ?", startDate)
-		} else {
-			query = s.db.Model(&table.SharingTable{}).Where("created_at BETWEEN ? AND ?", startDate, endDate)
-		}
-	} else {
-		if endDate == nil {
-			query = s.db.Model(&table.SharingTable{})
-		} else {
-			query = s.db.Model(&table.SharingTable{}).Where("created_at <= ?", endDate)
-		}
+	query := s.db.Model(&table.SharingTable{})
+	switch {
+	case opts.StartDate != nil && opts.EndDate != nil:
+		query = query.Where("created_at BETWEEN ? AND ?", opts.StartDate, opts.EndDate)
+	case opts.StartDate != nil:
+		query = query.Where("created_at >= ?", opts.StartDate)
+	case opts.EndDate != nil:
+		query = query.Where("created_at <= ?", opts.EndDate)
 	}
-	err := query.Order("created_at DESC").Find(&sharings).Error
-	if err != nil {
-		return nil, err
+	if opts.OnlyPublished {
+		query = query.Where("status = ?", 1)
 	}
-	log.Println(len(sharings))
-	return sharings, nil
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	order := "created_at DESC"
+	if opts.AscendingOrder {
+		order = "created_at ASC"
+	}
+	query = query.Order(order)
+	if opts.Paginated() {
+		query = query.Offset(opts.Offset()).Limit(opts.PageSize)
+	}
+	if err := query.Find(&sharings).Error; err != nil {
+		return nil, 0, err
+	}
+	return sharings, total, nil
 }
 
 func (s *SharingRepository) CreateSharing(sharing *table.SharingTable) error {
@@ -63,7 +72,13 @@ func (s *SharingRepository) CreateSharing(sharing *table.SharingTable) error {
 }
 
 func (s *SharingRepository) UpdateSharing(sharing *table.SharingTable) error {
-	return s.db.Save(&sharing).Error
+	return s.db.Model(&table.SharingTable{}).
+		Where("id = ?", sharing.ID).
+		Updates(map[string]any{
+			"content":   sharing.Content,
+			"author_id": sharing.AuthorID,
+			"status":    sharing.Status,
+		}).Error
 }
 
 func (s *SharingRepository) AddViewCountSharing(id string) error {
