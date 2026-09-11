@@ -4,6 +4,7 @@ import (
 	"Mou1ght/internal/domain/model/schema/request"
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/repository/interfaces"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -65,6 +66,18 @@ func (m *MessageRepository) DeleteMessageByID(id string) error {
 	return m.db.Where("id = ?", id).Delete(&table.MessageTable{}).Error
 }
 
+// DeleteOwnMessage 仅允许留言作者（author_ip 为该访问者 jti）删除自己的留言。
+func (m *MessageRepository) DeleteOwnMessage(id string, authorIP string) error {
+	result := m.db.Where("id = ? AND author_ip = ?", id, authorIP).Delete(&table.MessageTable{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("message not found or not owned")
+	}
+	return nil
+}
+
 func (m *MessageRepository) GetMessages(opts request.ListOptions) ([]*table.MessageTable, int64, error) {
 	msgs := make([]*table.MessageTable, 0)
 	query := m.db.Model(&table.MessageTable{})
@@ -103,4 +116,11 @@ func (m *MessageRepository) GetOwnedMessageIDs(authorIP string) ([]string, error
 	var ids []string
 	err := m.db.Model(&table.MessageTable{}).Where("author_ip = ?", authorIP).Pluck("id", &ids).Error
 	return ids, err
+}
+
+// GetMaxZ 返回当前最大层级，用于新留言/置顶时避免 z 冲突。
+func (m *MessageRepository) GetMaxZ() (int, error) {
+	var maxZ int
+	err := m.db.Model(&table.MessageTable{}).Select("COALESCE(MAX(z), 0)").Scan(&maxZ).Error
+	return maxZ, err
 }

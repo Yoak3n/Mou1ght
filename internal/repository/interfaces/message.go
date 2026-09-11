@@ -13,6 +13,8 @@ type MessageRepository interface {
 	AddLikeCountMessage(id string) error
 	GetMessageByID(id string) (*table.MessageTable, error)
 	DeleteMessageByID(id string) error
+	DeleteOwnMessage(id string, authorIP string) error
 	GetMessages(opts request.ListOptions) ([]*table.MessageTable, int64, error)
 	GetOwnedMessageIDs(authorIP string) ([]string, error)
+	GetMaxZ() (int, error)
 }

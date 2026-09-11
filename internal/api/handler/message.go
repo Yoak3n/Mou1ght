@@ -7,6 +7,7 @@ import (
 	"Mou1ght/internal/pkg/util"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -101,9 +102,54 @@ func (h *MessageHandler) UpdateMessage(c *fiber.Ctx) error {
 
 	err = h.messageService.UpdateMessage(req)
 	if err != nil {
+		ferr := &fiber.Error{}
+		if errors.As(err, &ferr) {
+			return util.ErrorResponse(c, ferr.Code, ferr.Message)
+		}
 		return util.ErrorResponse(c, 500, err.Error())
 	}
 	return util.SuccessResponse(c, nil, "Update message successfully")
+}
+
+// UpdateOwnMessage 访客编辑自己的留言：身份经游客 token 校验，服务端再核对所有权。
+func (h *MessageHandler) UpdateOwnMessage(c *fiber.Ctx) error {
+	req := &request.UpdateMessageRequest{}
+	if err := c.BodyParser(req); err != nil {
+		return util.ErrorResponse(c, 400, err.Error())
+	}
+
+	jti, err := parseVisitorJTI(req.VisitorToken)
+	if err != nil {
+		return util.ErrorResponse(c, 403, "Invalid visitor token")
+	}
+	req.VisitorToken = jti
+
+	if err := h.messageService.UpdateMessage(req); err != nil {
+		ferr := &fiber.Error{}
+		if errors.As(err, &ferr) {
+			return util.ErrorResponse(c, ferr.Code, ferr.Message)
+		}
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, nil, "Update message successfully")
+}
+
+// DeleteOwnMessage 访客删除自己的留言。
+func (h *MessageHandler) DeleteOwnMessage(c *fiber.Ctx) error {
+	req := &request.DeleteOwnMessageRequest{}
+	if err := c.BodyParser(req); err != nil {
+		return util.ErrorResponse(c, 400, err.Error())
+	}
+
+	jti, err := parseVisitorJTI(req.VisitorToken)
+	if err != nil {
+		return util.ErrorResponse(c, 403, "Invalid visitor token")
+	}
+
+	if err := h.messageService.DeleteOwnMessage(req.ID, jti); err != nil {
+		return util.ErrorResponse(c, 500, err.Error())
+	}
+	return util.SuccessResponse(c, nil, "Delete message successfully")
 }
 
 func (h *MessageHandler) UpdateMessagePosition(c *fiber.Ctx) error {
@@ -229,7 +275,13 @@ func (h *MessageHandler) LikeMessage(c *fiber.Ctx) error {
 }
 
 func (h *MessageHandler) OwnedMessageIDs(c *fiber.Ctx) error {
+	// 优先从 Authorization 头取游客 token（JWT 不进 URL），保留 query 参数兼容旧调用
 	token := c.Query("token", "")
+	if token == "" {
+		if auth := c.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			token = strings.TrimPrefix(auth, "Bearer ")
+		}
+	}
 	if token == "" {
 		return util.ErrorResponse(c, 400, "token is required")
 	}

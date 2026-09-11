@@ -145,10 +145,12 @@ func (m *mockMessageRepo) GetMessageByID(id string) (*table.MessageTable, error)
 	return m.getMessage, m.getMessageErr
 }
 func (m *mockMessageRepo) DeleteMessageByID(id string) error { return nil }
+func (m *mockMessageRepo) DeleteOwnMessage(id string, authorIP string) error { return nil }
 func (m *mockMessageRepo) GetMessages(opts request.ListOptions) ([]*table.MessageTable, int64, error) {
 	return m.getMessages, m.messageTotal, nil
 }
 func (m *mockMessageRepo) GetOwnedMessageIDs(authorIP string) ([]string, error) { return nil, nil }
+func (m *mockMessageRepo) GetMaxZ() (int, error) { return 0, nil }
 
 type mockSharingRepo struct {
 	updated      *table.SharingTable

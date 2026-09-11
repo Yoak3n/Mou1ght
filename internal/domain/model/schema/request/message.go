@@ -30,3 +30,8 @@ type UpdateMessagePositionRequest struct {
 	Position     MessagePosition `json:"position"`
 	VisitorToken string          `json:"visitor_token"`
 }
+
+type DeleteOwnMessageRequest struct {
+	ID           string `json:"id"`
+	VisitorToken string `json:"visitor_token"`
+}

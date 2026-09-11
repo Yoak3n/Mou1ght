@@ -49,6 +49,10 @@ func (m *MessageService) CreateMessage(req *request.CreateMessageRequest) error 
 	} else {
 		record.Status = 1
 	}
+	// 层级统一由服务端取当前最大值 +1，避免并发客户端提交相同 z 导致压盖
+	if maxZ, err := m.messages.GetMaxZ(); err == nil && record.Z <= maxZ {
+		record.Z = maxZ + 1
+	}
 	if err := m.messages.CreateMessage(record); err != nil {
 		return err
 	}
@@ -111,6 +115,15 @@ func (m *MessageService) GetMessageByID(id string) (*table.MessageTable, error) 
 
 func (m *MessageService) DeleteMessageByID(id string) error {
 	if err := m.messages.DeleteMessageByID(id); err != nil {
+		return err
+	}
+	notify.RevalidateClient()
+	return nil
+}
+
+// DeleteOwnMessage 校验访问者身份后删除自己的留言。
+func (m *MessageService) DeleteOwnMessage(id string, jti string) error {
+	if err := m.messages.DeleteOwnMessage(id, jti); err != nil {
 		return err
 	}
 	notify.RevalidateClient()
