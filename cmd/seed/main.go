@@ -15,6 +15,7 @@ import (
 
 	"Mou1ght/internal/config"
 	"Mou1ght/internal/domain/model/table"
+	"Mou1ght/internal/notify"
 	"Mou1ght/internal/pkg/database"
 	"Mou1ght/internal/pkg/util"
 
@@ -392,4 +393,9 @@ func main() {
   说说: %d 条（含 1 条私密）
   留言: %d 条（含待审核与归档）
 `, len(categories), len(tags), len(articles), len(sharings), len(messages))
+
+	// 若配置了前台 webhook，通知前台立即失效缓存，避免看到旧数据
+	clientCfg := config.GetConfig().Client
+	notify.Init(clientCfg.RevalidateURL, clientCfg.RevalidateSecret)
+	notify.RevalidateClient()
 }
