@@ -42,7 +42,7 @@ func (m *MessageService) CreateMessage(req *request.CreateMessageRequest) error 
 		X:        req.Position.X,
 		Y:        req.Position.Y,
 		Z:        req.Position.Z,
-		AuthorIP: req.AuthorIP,
+		AuthorIP: req.VisitorToken,
 	}
 	if config.GetConfig().Blog.Board.NeedReviewed {
 		record.Status = 3
@@ -64,7 +64,7 @@ func (m *MessageService) UpdateMessage(req *request.UpdateMessageRequest) error 
 	if existing == nil || existing.ID == "" {
 		return fiber.NewError(404, "message not found")
 	}
-	if existing.AuthorIP != req.AuthorIP {
+	if existing.AuthorIP != req.VisitorToken {
 		return fiber.NewError(403, "Forbidden")
 	}
 
@@ -90,7 +90,7 @@ func (m *MessageService) UpdateMessage(req *request.UpdateMessageRequest) error 
 }
 
 func (m *MessageService) UpdateMessagePosition(req *request.UpdateMessagePositionRequest, isAdmin bool) error {
-	return m.messages.UpdateMessagePosition(req.ID, req.Position, req.AuthorIP, isAdmin)
+	return m.messages.UpdateMessagePosition(req.ID, req.Position, req.VisitorToken, isAdmin)
 }
 
 func (m *MessageService) ViewMessage(id string) error {

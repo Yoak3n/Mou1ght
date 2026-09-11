@@ -37,11 +37,11 @@ func (h *MessageHandler) CreateMessage(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
 
-	jti, err := parseVisitorJTI(req.AuthorIP)
+	jti, err := parseVisitorJTI(req.VisitorToken)
 	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	req.AuthorIP = jti
+	req.VisitorToken = jti
 
 	err = h.messageService.CreateMessage(req)
 	if err != nil {
@@ -93,11 +93,11 @@ func (h *MessageHandler) UpdateMessage(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
 
-	jti, err := parseVisitorJTI(req.AuthorIP)
+	jti, err := parseVisitorJTI(req.VisitorToken)
 	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	req.AuthorIP = jti
+	req.VisitorToken = jti
 
 	err = h.messageService.UpdateMessage(req)
 	if err != nil {
@@ -113,11 +113,11 @@ func (h *MessageHandler) UpdateMessagePosition(c *fiber.Ctx) error {
 		return util.ErrorResponse(c, 400, err.Error())
 	}
 
-	jti, err := parseVisitorJTI(req.AuthorIP)
+	jti, err := parseVisitorJTI(req.VisitorToken)
 	if err != nil {
 		return util.ErrorResponse(c, 403, "Invalid visitor token")
 	}
-	req.AuthorIP = jti
+	req.VisitorToken = jti
 
 	err = h.messageService.UpdateMessagePosition(req, false)
 	if err != nil {

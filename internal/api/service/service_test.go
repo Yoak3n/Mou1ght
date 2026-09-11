@@ -55,8 +55,8 @@ func TestMessageService_UpdateMessage_Ownership(t *testing.T) {
 		svc := NewMessageService(repo)
 		err := svc.UpdateMessage(&request.UpdateMessageRequest{
 			CreateMessageRequest: request.CreateMessageRequest{
-				Content:  "x",
-				AuthorIP: "intruder-jti",
+				Content:      "x",
+				VisitorToken: "intruder-jti",
 			},
 			ID: "m1",
 		})
@@ -73,7 +73,7 @@ func TestMessageService_UpdateMessage_Ownership(t *testing.T) {
 		repo := &mockMessageRepo{getMessageErr: gorm.ErrRecordNotFound}
 		svc := NewMessageService(repo)
 		err := svc.UpdateMessage(&request.UpdateMessageRequest{
-			CreateMessageRequest: request.CreateMessageRequest{AuthorIP: "jti"},
+				CreateMessageRequest: request.CreateMessageRequest{VisitorToken: "jti"},
 			ID:                   "missing",
 		})
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -91,9 +91,9 @@ func TestMessageService_UpdateMessage_Ownership(t *testing.T) {
 		svc := NewMessageService(repo)
 		err := svc.UpdateMessage(&request.UpdateMessageRequest{
 			CreateMessageRequest: request.CreateMessageRequest{
-				Content:  "updated",
-				AuthorIP: "owner-jti",
-				Position: request.MessagePosition{X: 1, Y: 2, Z: 3},
+				Content:      "updated",
+				VisitorToken: "owner-jti",
+				Position:     request.MessagePosition{X: 1, Y: 2, Z: 3},
 			},
 			ID: "m1",
 		})

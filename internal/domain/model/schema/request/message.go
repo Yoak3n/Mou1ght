@@ -7,10 +7,10 @@ type MessagePosition struct {
 }
 
 type CreateMessageRequest struct {
-	Content     string          `json:"content"`
-	Position    MessagePosition `json:"position"`
-	AuthorIP    string          `json:"author_ip"`
-	BoardAnswer string          `json:"board_answer"`
+	Content      string          `json:"content"`
+	Position     MessagePosition `json:"position"`
+	VisitorToken string          `json:"visitor_token"`
+	BoardAnswer  string          `json:"board_answer"`
 }
 
 type UpdateMessageRequest struct {
@@ -26,7 +26,7 @@ type MessageListRequest struct {
 }
 
 type UpdateMessagePositionRequest struct {
-	ID       string          `json:"id"`
-	Position MessagePosition `json:"position"`
-	AuthorIP string          `json:"author_ip"`
+	ID           string          `json:"id"`
+	Position     MessagePosition `json:"position"`
+	VisitorToken string          `json:"visitor_token"`
 }
