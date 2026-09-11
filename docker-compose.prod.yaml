@@ -41,6 +41,8 @@ services:
       - BASE_URL=http://backend:10420
       - NEXT_PUBLIC_BASE_URL=http://backend:10420
       - REVALIDATE_SECRET=${REVALIDATE_SECRET:-please-change-me}
+      # sitemap / RSS 等生成的公网地址，必须改成你的实际域名
+      - SITE_URL=${SITE_URL:-https://your-domain.com}
     depends_on:
       - backend
     restart: unless-stopped
