@@ -35,12 +35,19 @@ func (r *AttachmentRepository) GetAttachmentsByIDs(ids []string) ([]table.Attach
 
 func (r *AttachmentRepository) GetAttachmentBySha256(sha256 string, size int64) (*table.AttachmentTable, error) {
 	attachment := &table.AttachmentTable{}
-	result := r.db.Where("sha256 = ? AND size = ?", sha256, size).First(attachment)
+	// Unscoped：软删行仍占 uniqueIndex(storage_path)，重传同内容文件时必须能命中以便恢复
+	result := r.db.Unscoped().Where("sha256 = ? AND size = ?", sha256, size).First(attachment)
 
 	if result.Error == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
 	return attachment, result.Error
+}
+
+func (r *AttachmentRepository) RestoreAttachment(id string) error {
+	return r.db.Unscoped().Model(&table.AttachmentTable{}).
+		Where("id = ?", id).
+		Update("deleted_at", nil).Error
 }
 
 func (r *AttachmentRepository) ListAttachments() ([]table.AttachmentTable, error) {

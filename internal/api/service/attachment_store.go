@@ -72,37 +72,28 @@ func (s *AttachmentService) uploadOne(file *multipart.FileHeader) (entity.Attach
 	}
 	shaHex := hex.EncodeToString(hash.Sum(nil))
 
-	existing, err := s.attachments.GetAttachmentBySha256(shaHex, file.Size)
-	if err == nil && existing != nil && existing.ID != "" {
-		return attachmentEntityFromTable(existing), nil
-	}
-
 	ext := resolveExt(file.Filename, mimeType)
 	dir := resolveDir(mimeType)
 	now := time.Now()
 	storagePath := path.Join(dir, now.Format("2006"), now.Format("01"), shaHex+ext)
 
-	dstDir := path.Join(consts.Upload, dir, now.Format("2006"), now.Format("01"))
-	if e := fileutil.CreateDirNotExists(dstDir); e != nil {
-		return entity.AttachmentEntity{}, e
+	existing, err := s.attachments.GetAttachmentBySha256(shaHex, file.Size)
+	if err == nil && existing != nil && existing.ID != "" {
+		// 同内容已存在：可能是软删残留（uniqueIndex 仍占位），恢复并确保磁盘文件在
+		if e := writeAttachmentFile(file, existing.StoragePath); e != nil {
+			return entity.AttachmentEntity{}, e
+		}
+		if existing.DeletedAt.Valid {
+			if e := s.attachments.RestoreAttachment(existing.ID); e != nil {
+				return entity.AttachmentEntity{}, e
+			}
+		}
+		return attachmentEntityFromTable(existing), nil
 	}
 
-	dstFullPath := path.Join(consts.Upload, storagePath)
-	src2, err := file.Open()
-	if err != nil {
-		return entity.AttachmentEntity{}, err
-	}
-	dst, err := os.OpenFile(dstFullPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
-	if err != nil {
-		_ = src2.Close()
-		return entity.AttachmentEntity{}, err
-	}
-	_, err = io.Copy(dst, src2)
-	_ = dst.Close()
-	_ = src2.Close()
-	if err != nil {
-		_ = os.Remove(dstFullPath)
-		return entity.AttachmentEntity{}, err
+	// 新文件：路径用已有记录的 storagePath 规则；避免与软删行撞 unique 时先写盘再入库
+	if e := writeAttachmentFile(file, storagePath); e != nil {
+		return entity.AttachmentEntity{}, e
 	}
 
 	record := &table.AttachmentTable{
@@ -114,10 +105,35 @@ func (s *AttachmentService) uploadOne(file *multipart.FileHeader) (entity.Attach
 		Size:         file.Size,
 	}
 	if err := s.attachments.CreateAttachment(record); err != nil {
-		_ = os.Remove(dstFullPath)
+		_ = os.Remove(path.Join(consts.Upload, strings.TrimPrefix(storagePath, "/")))
 		return entity.AttachmentEntity{}, err
 	}
 	return attachmentEntityFromTable(record), nil
+}
+
+func writeAttachmentFile(file *multipart.FileHeader, storagePath string) error {
+	dstDir := path.Join(consts.Upload, path.Dir(strings.TrimPrefix(storagePath, "/")))
+	if e := fileutil.CreateDirNotExists(dstDir); e != nil {
+		return e
+	}
+	dstFullPath := path.Join(consts.Upload, strings.TrimPrefix(storagePath, "/"))
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	dst, err := os.OpenFile(dstFullPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err != nil {
+		_ = src.Close()
+		return err
+	}
+	_, err = io.Copy(dst, src)
+	_ = dst.Close()
+	_ = src.Close()
+	if err != nil {
+		_ = os.Remove(dstFullPath)
+		return err
+	}
+	return nil
 }
 
 func attachmentEntityFromTable(t *table.AttachmentTable) entity.AttachmentEntity {

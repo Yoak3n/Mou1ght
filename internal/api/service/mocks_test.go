@@ -200,6 +200,7 @@ func (m *mockAttachmentRepo) GetAttachmentsByIDs(ids []string) ([]table.Attachme
 func (m *mockAttachmentRepo) GetAttachmentBySha256(sha256 string, size int64) (*table.AttachmentTable, error) {
 	return nil, nil
 }
+func (m *mockAttachmentRepo) RestoreAttachment(id string) error { return nil }
 func (m *mockAttachmentRepo) ListAttachments() ([]table.AttachmentTable, error) { return nil, nil }
 func (m *mockAttachmentRepo) DeleteAttachment(id string) error {
 	m.deleted = append(m.deleted, id)

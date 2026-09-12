@@ -38,7 +38,10 @@ type Deps struct {
 }
 
 func InitRouter(deps Deps) *fiber.App {
-	r := fiber.New()
+	r := fiber.New(fiber.Config{
+		// 与附件服务 50MB 上限对齐；默认 4MB 会导致大文件在解析 multipart 时失败
+		BodyLimit: 50 * 1024 * 1024,
+	})
 	r.Use(cors.New())
 	setupRouter(r, &deps)
 	return r
