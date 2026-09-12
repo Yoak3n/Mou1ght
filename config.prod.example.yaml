@@ -1,0 +1,50 @@
+# 生产环境配置模板（独立 PostgreSQL 容器 + 前台缓存失效 webhook）
+# 用法：复制为 config.yaml 放到服务器上（compose 挂载 ./config.yaml:/app/config.yaml），
+#       填写两处"请改成..."后即可。
+#
+# 说明：blog 段也可以在后台「网站设置」里修改并保存（保存会写回本文件）。
+
+blog:
+    nav_bar:
+        links:
+            - type: internal
+              href: "/"
+              label: home
+            - type: internal
+              href: "/board"
+              label: board
+            - type: internal
+              href: "/sharings"
+              label: sharings
+        website_information:
+            title: Mou1ght
+            icon: ""
+            logo: ""
+            keywords:
+                - Mou1ght
+                - Blog
+    bottom_extra:
+        html: ""
+        css: ""
+    board:
+        question: ""
+        answer: ""
+        need_reviewed: true
+
+database:
+    # 独立 PostgreSQL 容器：host 用 compose 服务名 db；
+    # 账号密码必须与 .env 的 POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB 一致
+    dsn: host=db user=mou1ght password=请改成你的数据库密码 dbname=mou1ght port=5432 sslmode=disable TimeZone=Asia/Shanghai
+    type: postgres
+
+security:
+    # 留空则首次启动自动生成并写回本文件（挂载是可写的，跨重启持久）；
+    # 也可以改用 .env 里的 JWT_KEY / VISITOR_JWT_KEY 固定密钥
+    jwt_key: ""
+    visitor_jwt_key: ""
+
+client:
+    # 前台按需失效 webhook：后台发布文章/设置保存后，前台立即刷新缓存
+    revalidate_url: "http://client:3000/api/revalidate"
+    # 必须与 .env 里的 REVALIDATE_SECRET 完全一致
+    revalidate_secret: "请改成与REVALIDATE_SECRET相同的随机串"
