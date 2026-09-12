@@ -124,9 +124,11 @@ func attachmentEntityFromTable(t *table.AttachmentTable) entity.AttachmentEntity
 	if t == nil {
 		return entity.AttachmentEntity{}
 	}
+	rel := "/upload/" + strings.TrimPrefix(t.StoragePath, "/")
 	return entity.AttachmentEntity{
 		ID:           t.ID,
-		URL:          "/upload/" + strings.TrimPrefix(t.StoragePath, "/"),
+		URL:          rel,
+		FilePath:     rel,
 		OriginalName: t.OriginalName,
 		Size:         t.Size,
 		Mime:         t.Mime,

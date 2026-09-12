@@ -21,6 +21,7 @@ type AttachmentInfo struct {
 type AttachmentEntity struct {
 	ID           string `json:"id"`
 	URL          string `json:"url"`
+	FilePath     string `json:"file_path,omitempty"`
 	OriginalName string `json:"original_name,omitempty"`
 	Size         int64  `json:"size,omitempty"`
 	Mime         string `json:"mime,omitempty"`
@@ -31,6 +32,7 @@ type AttachmentEntity struct {
 func NewAttachmentEntityFromPath(p string) AttachmentEntity {
 	return AttachmentEntity{
 		URL:          p,
+		FilePath:     p,
 		OriginalName: path.Base(p),
 	}
 }

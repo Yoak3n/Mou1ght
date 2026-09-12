@@ -5,7 +5,6 @@ import (
 	"Mou1ght/internal/domain/model/table"
 	"Mou1ght/internal/pkg/util"
 	"Mou1ght/internal/repository/interfaces"
-	"strings"
 )
 
 type DTOService struct {
@@ -190,13 +189,7 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 			}
 			for _, id := range ids {
 				if r, ok := rm[id]; ok {
-					attachments = append(attachments, entity.AttachmentEntity{
-						ID:           r.ID,
-						URL:          "/upload/" + strings.TrimPrefix(r.StoragePath, "/"),
-						OriginalName: r.OriginalName,
-						Size:         r.Size,
-						Mime:         r.Mime,
-					})
+					attachments = append(attachments, attachmentEntityFromTable(&r))
 				}
 			}
 		}
