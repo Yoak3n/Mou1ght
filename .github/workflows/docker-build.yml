@@ -31,19 +31,18 @@ jobs:
           username: yoaken
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 打两个 tag：latest + (版本号/短 SHA)
+      # 打镜像 tag：latest + (版本号，tag 触发时才有)
       - name: Compute image tags
         id: meta
         run: |
-          SHA="${GITHUB_SHA:0:8}"
-          if [ "${GITHUB_REF_TYPE}" == "tag" ]; then
-            SUFFIX="${GITHUB_REF_NAME},${SHA}"
-          else
-            SUFFIX="${SHA}"
-          fi
           NS="${IMAGE_NAMESPACE}"
-          echo "backend=${NS}/${IMAGE_BACKEND}:latest,${NS}/${IMAGE_BACKEND}:${SUFFIX}" >> "$GITHUB_OUTPUT"
-          echo "client=${NS}/${IMAGE_CLIENT}:latest,${NS}/${IMAGE_CLIENT}:${SUFFIX}" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" == "tag" ]; then
+            SUFFIX="${GITHUB_REF_NAME}"
+          else
+            SUFFIX=""
+          fi
+          echo "backend=${NS}/${IMAGE_BACKEND}:latest${SUFFIX:+,${NS}/${IMAGE_BACKEND}:${SUFFIX}}" >> "$GITHUB_OUTPUT"
+          echo "client=${NS}/${IMAGE_CLIENT}:latest${SUFFIX:+,${NS}/${IMAGE_CLIENT}:${SUFFIX}}" >> "$GITHUB_OUTPUT"
 
       # 后端镜像：Dockerfile 多阶段（先构建 admin 前端，再 embed 进 Go 二进制）
       - name: Build & push backend

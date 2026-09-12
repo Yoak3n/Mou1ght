@@ -29,7 +29,8 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $$!; certbot renew --webroot -w /var/www/certbot --quiet; done;'"
 
   backend:
-    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-backend:${IMAGE_TAG:-latest}
+    # 镜像命名空间写死为 Docker Hub 用户名（公开信息，无需在 .env 配置）
+    image: yoaken/mou1ght-backend:${IMAGE_TAG:-latest}
     expose:
       - "10420"
     environment:
@@ -59,7 +60,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-client:${IMAGE_TAG:-latest}
+    image: yoaken/mou1ght-client:${IMAGE_TAG:-latest}
     expose:
       - "3000"
     environment:

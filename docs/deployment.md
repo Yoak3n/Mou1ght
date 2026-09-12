@@ -197,29 +197,25 @@ docker compose -f docker-compose.prod.yaml up -d --build
 
 如果不想在服务器上构建镜像，可以用 GitHub Actions 构建推送、服务器直接拉取：
 
-**1. 仓库设置 Secrets**（Settings → Secrets and variables → Actions）：
+**1. 仓库设置 Secrets**（Settings → Secrets and variables → Actions）——只需一个：
 
 | 名称 | 说明 |
 |---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub 用户名 |
-| `DOCKERHUB_TOKEN` | Docker Hub **Access Token**（账户 → Security → Access Tokens，不是登录密码） |
+| `DOCKERHUB_TOKEN` | Docker Hub **Access Token**（账户 → Security → Access Tokens，不是登录密码）。用户名已在 workflow/compose 中写死，无需配置 |
 
 **2. 推送触发构建**：向 `main` 分支 push（或打 `v*` tag、手动 `workflow_dispatch`）时，`.github/workflows/docker-build.yml` 会构建两个镜像并推送：
-`<用户名>/mou1ght-backend`、`<用户名>/mou1ght-client`（各带 `latest` + 版本/短 SHA 标签）。
+`yoaken/mou1ght-backend`、`yoaken/mou1ght-client`（main push 打 `latest`；`v*` tag 额外打版本号标签）。
 
 **3. 服务器拉取部署**（不需要源码、不需要 Dockerfile 构建）：
 
 ```bash
-# .env 里指定镜像命名空间（可加 IMAGE_TAG 固定版本）
-echo "DOCKERHUB_USERNAME=你的DockerHub用户名" >> .env
-
-# 服务器用 docker-compose.deploy.yaml（纯镜像、无 build 块）；
+# 服务器用 docker-compose.deploy.yaml（纯镜像、无 build 块，镜像地址已写死用户名）；
 # 别用 docker-compose.prod.yaml——它带 build 块，服务器没有源码目录会报 "frontend/client does not exist"
 docker compose -f docker-compose.deploy.yaml pull
 docker compose -f docker-compose.deploy.yaml up -d
 ```
 
-更新时只需 `docker compose -f docker-compose.deploy.yaml pull && docker compose -f docker-compose.deploy.yaml up -d`。
+更新时只需 `docker compose -f docker-compose.deploy.yaml pull && docker compose -f docker-compose.deploy.yaml up -d`（默认 `latest`；想固定版本可在 `.env` 加 `IMAGE_TAG=v1.0.0`）。
 
 > **提示**：`docker-compose.deploy.yaml` 与 `docker-compose.prod.yaml` 的服务定义一致（含 client 健康检查），只去掉了 build 块。改配置时记得两份保持同步。
 

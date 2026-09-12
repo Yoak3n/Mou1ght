@@ -30,7 +30,8 @@ services:
   backend:
     # 服务器部署：docker compose pull 直接拉取镜像（由 GitHub Actions 推送到 Docker Hub）；
     # 本地/调试：docker compose build 仍会从 build 上下文构建
-    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-backend:${IMAGE_TAG:-latest}
+    # 镜像命名空间写死为 Docker Hub 用户名（公开信息，无需在 .env 配置）
+    image: yoaken/mou1ght-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -67,7 +68,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-client:${IMAGE_TAG:-latest}
+    image: yoaken/mou1ght-client:${IMAGE_TAG:-latest}
     build:
       context: ./frontend/client
       dockerfile: Dockerfile
