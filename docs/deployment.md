@@ -187,6 +187,34 @@ docker compose -f docker-compose.prod.yaml up -d --build
 
 首次启动需要构建镜像，耗时较长。
 
+### 方式 D：GitHub Actions 自动构建 + Docker Hub 拉取部署
+
+如果不想在服务器上构建镜像，可以用 GitHub Actions 构建推送、服务器直接拉取：
+
+**1. 仓库设置 Secrets**（Settings → Secrets and variables → Actions）：
+
+| 名称 | 说明 |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名 |
+| `DOCKERHUB_TOKEN` | Docker Hub **Access Token**（账户 → Security → Access Tokens，不是登录密码） |
+
+**2. 推送触发构建**：向 `main` 分支 push（或打 `v*` tag、手动 `workflow_dispatch`）时，`.github/workflows/docker-build.yml` 会构建两个镜像并推送：
+`<用户名>/mou1ght-backend`、`<用户名>/mou1ght-client`（各带 `latest` + 版本/短 SHA 标签）。
+
+**3. 服务器拉取部署**（不需要源码、不需要 Dockerfile 构建）：
+
+```bash
+# .env 里指定镜像命名空间（可加 IMAGE_TAG 固定版本）
+echo "DOCKERHUB_USERNAME=你的DockerHub用户名" >> .env
+
+docker compose -f docker-compose.prod.yaml pull
+docker compose -f docker-compose.prod.yaml up -d
+```
+
+更新时只需 `docker compose pull && docker compose up -d`。
+
+> **注意**：`frontend/` 是 git 子模块，workflow 已用 `submodules: recursive` 递归检出；子模块仓库需对 GitHub Actions 可访问（公开仓库无需额外配置，私有仓库需配置 PAT）。
+
 ## 第七步：验证部署
 
 ```bash

@@ -25,6 +25,9 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew --webroot -w /var/www/certbot --quiet; done;'"
 
   backend:
+    # 服务器部署：docker compose pull 直接拉取镜像（由 GitHub Actions 推送到 Docker Hub）；
+    # 本地/调试：docker compose build 仍会从 build 上下文构建
+    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,6 +44,7 @@ services:
     restart: unless-stopped
 
   client:
+    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-client:${IMAGE_TAG:-latest}
     build:
       context: ./frontend/client
       dockerfile: Dockerfile
