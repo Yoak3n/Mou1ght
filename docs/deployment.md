@@ -215,6 +215,38 @@ docker compose -f docker-compose.prod.yaml up -d
 
 > **注意**：`frontend/` 是 git 子模块，workflow 已用 `submodules: recursive` 递归检出；子模块仓库需对 GitHub Actions 可访问（公开仓库无需额外配置，私有仓库需配置 PAT）。
 
+### 使用独立 PostgreSQL 容器（可选，替换默认 SQLite）
+
+compose 已内置 `db` 服务（postgres:16-alpine，带健康检查与独立数据卷），想用独立数据库时：
+
+**1. 改服务器上的 `config.yaml`（数据库段）：**
+
+```yaml
+database:
+    # host 用 compose 服务名 db；账号密码与 .env 的 POSTGRES_* 保持一致
+    dsn: host=db user=mou1ght password=change-me dbname=mou1ght port=5432 sslmode=disable
+    type: postgres
+```
+
+**2. `.env` 增加（与上面对应）：**
+
+```bash
+POSTGRES_USER=mou1ght
+POSTGRES_PASSWORD=change-me
+POSTGRES_DB=mou1ght
+```
+
+**3. 启动**（backend 会等 `db` 健康后再启动）：
+
+```bash
+docker compose -f docker-compose.prod.yaml up -d
+```
+
+> 说明：
+> - 默认仍是 SQLite（`data/Mou1ght` 在 `/app/data` 卷内）；切 PostgreSQL 后**附件仍存 `/app/data` 卷**，不受影响；
+> - 若服务器上已有 SQLite 数据，切到 PostgreSQL **不会自动迁移**（全新空库，首次启动自动建表、注册第一个管理员）；
+> - 想在宿主机直接连库调试，可给 `db` 服务临时加 `ports: ["5432:5432"]`。
+
 ## 第七步：验证部署
 
 ```bash

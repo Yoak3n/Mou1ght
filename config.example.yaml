@@ -25,8 +25,13 @@ blog:
         answer: ""
         need_reviewed: true
 database:
-    # SQLite：库文件在 data/ 目录下（容器内对应 /app/data 卷，避免重建丢数据）；
-    # PostgreSQL：这里填 libpq 连接串（host=... dbname=...）
+    # 方式一（默认，SQLite）：库文件在 data/ 目录下（容器内对应 /app/data 卷，避免重建丢数据）
+    # dsn: data/Mou1ght
+    # type: sqlite
+    #
+    # 方式二（独立 PostgreSQL 容器）：dsn 填 libpq 连接串，host 用 compose 服务名 db
+    # dsn: host=db user=mou1ght password=change-me dbname=mou1ght port=5432 sslmode=disable
+    # type: postgres
     dsn: data/Mou1ght
     type: sqlite
 security:

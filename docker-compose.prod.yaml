@@ -38,9 +38,29 @@ services:
       - JWT_KEY=${JWT_KEY:-}
       - VISITOR_JWT_KEY=${VISITOR_JWT_KEY:-}
     volumes:
+      # 附件等静态数据（upload）仍落在 /app/data 卷
       - mou1ght-data:/app/data
       # 去掉 :ro：后端会把生成的 JWT 密钥与站点设置写回 config.yaml（同一份文件，跨重启持久）
       - ./config.yaml:/app/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 独立 PostgreSQL 数据库（可选：不想要 sqlite 时使用）
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mou1ght}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mou1ght-pass}
+      - POSTGRES_DB=${POSTGRES_DB:-mou1ght}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mou1ght} -d ${POSTGRES_DB:-mou1ght}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     restart: unless-stopped
 
   client:
@@ -61,4 +81,5 @@ services:
 
 volumes:
   mou1ght-data:
+  postgres-data:
   certbot-webroot:
