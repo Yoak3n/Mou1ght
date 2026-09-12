@@ -4,7 +4,7 @@ import "Mou1ght/internal/domain/model/table"
 
 type CategoryRepository interface {
 	CreateCategory(category *table.CategoryTable) error
-	UpdateCategory(category *table.CategoryTable) error
+	UpdateCategoryFields(id string, fields map[string]any) error
 	DeleteCategory(categoryID string) error
 	GetAllCategories() ([]table.CategoryTable, error)
 	GetCategoriesByID(ids []string) ([]table.CategoryTable, error)

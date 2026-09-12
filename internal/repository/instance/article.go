@@ -84,6 +84,22 @@ func (a *ArticleRepository) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*
 	return articles, nil
 }
 
+func (a *ArticleRepository) GetArticlesByIDs(ids []string, desc bool) ([]table.ArticleTable, error) {
+	if len(ids) == 0 {
+		return []table.ArticleTable{}, nil
+	}
+	articles := make([]table.ArticleTable, 0, len(ids))
+	order := "created_at ASC"
+	if desc {
+		order = "created_at DESC"
+	}
+	err := a.db.Where("id IN ?", ids).Order(order).Find(&articles).Error
+	if err != nil {
+		return nil, err
+	}
+	return articles, nil
+}
+
 func (a *ArticleRepository) GetArticles(opts request.ListOptions) ([]*table.ArticleTable, int64, error) {
 	articles := make([]*table.ArticleTable, 0)
 	query := a.db.Model(&table.ArticleTable{})

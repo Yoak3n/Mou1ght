@@ -121,3 +121,7 @@ func (s *ArticleService) DeleteArticleByID(id string) error {
 func (s *ArticleService) GetArticlesByAuthorID(authorID string, descend bool) ([]table.ArticleTable, error) {
 	return s.articles.GetArticlesByAuthorID(authorID, descend)
 }
+
+func (s *ArticleService) GetArticlesByIDs(ids []string, descend bool) ([]table.ArticleTable, error) {
+	return s.articles.GetArticlesByIDs(ids, descend)
+}

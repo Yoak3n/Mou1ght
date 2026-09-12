@@ -83,22 +83,84 @@ func (c *CategoryLinkRepository) GetArticlesFromCategoryLink(link *table.Categor
 	return articles, nil
 }
 
+// GetCategoryLinkByKeyword 按分类 label 查询，并展开子孙分类：
+// 返回的 map 只含命中的分类本身；links 中子孙分类的 CategoryID 会归并到命中的祖先，
+// 便于上层按「请求的分类」聚合出含子分类的文章列表。
 func (c *CategoryLinkRepository) GetCategoryLinkByKeyword(keyword []string) (map[string]table.CategoryTable, []table.CategoryLinkTable, error) {
-	categories := make([]table.CategoryTable, 0)
-	err := c.db.Where("label in ?", keyword).Find(&categories).Error
-	if err != nil {
-		return nil, nil, err
-	}
-	categoriesIds := make([]string, len(categories))
 	categoriesMap := make(map[string]table.CategoryTable)
-	for i, cat := range categories {
-		categoriesIds[i] = cat.ID
-		categoriesMap[cat.ID] = cat
+	if len(keyword) == 0 {
+		return categoriesMap, []table.CategoryLinkTable{}, nil
 	}
-	links := make([]table.CategoryLinkTable, 0)
-	err = c.db.Where("category_id IN ?", categoriesIds).Find(&links).Error
-	if err != nil {
+
+	all := make([]table.CategoryTable, 0)
+	if err := c.db.Find(&all).Error; err != nil {
 		return nil, nil, err
+	}
+
+	byLabel := make(map[string][]table.CategoryTable, len(all))
+	childrenOf := make(map[string][]string, len(all))
+	for _, cat := range all {
+		byLabel[cat.Label] = append(byLabel[cat.Label], cat)
+		if cat.ParentID != "" {
+			childrenOf[cat.ParentID] = append(childrenOf[cat.ParentID], cat.ID)
+		}
+	}
+
+	rootIDs := make([]string, 0)
+	seenRoot := make(map[string]bool)
+	for _, label := range keyword {
+		for _, cat := range byLabel[label] {
+			if seenRoot[cat.ID] {
+				continue
+			}
+			seenRoot[cat.ID] = true
+			rootIDs = append(rootIDs, cat.ID)
+			categoriesMap[cat.ID] = cat
+		}
+	}
+	if len(rootIDs) == 0 {
+		return categoriesMap, []table.CategoryLinkTable{}, nil
+	}
+
+	// descendant/root ID -> 命中的根分类 ID
+	ownerRoot := make(map[string]string)
+	for _, rootID := range rootIDs {
+		if _, ok := ownerRoot[rootID]; !ok {
+			ownerRoot[rootID] = rootID
+		}
+		queue := []string{rootID}
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+			for _, childID := range childrenOf[cur] {
+				if _, visited := ownerRoot[childID]; visited {
+					continue
+				}
+				ownerRoot[childID] = rootID
+				queue = append(queue, childID)
+			}
+		}
+	}
+
+	scopeIDs := make([]string, 0, len(ownerRoot))
+	for id := range ownerRoot {
+		scopeIDs = append(scopeIDs, id)
+	}
+
+	rawLinks := make([]table.CategoryLinkTable, 0)
+	if err := c.db.Where("category_id IN ?", scopeIDs).Find(&rawLinks).Error; err != nil {
+		return nil, nil, err
+	}
+
+	links := make([]table.CategoryLinkTable, 0, len(rawLinks))
+	for _, link := range rawLinks {
+		root, ok := ownerRoot[link.CategoryID]
+		if !ok {
+			continue
+		}
+		rolled := link
+		rolled.CategoryID = root
+		links = append(links, rolled)
 	}
 
 	return categoriesMap, links, nil

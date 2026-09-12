@@ -18,13 +18,13 @@ func (c *CategoryRepository) CreateCategory(category *table.CategoryTable) error
 	return c.db.Create(category).Error
 }
 
-func (c *CategoryRepository) UpdateCategory(category *table.CategoryTable) error {
+func (c *CategoryRepository) UpdateCategoryFields(id string, fields map[string]any) error {
+	if id == "" || len(fields) == 0 {
+		return nil
+	}
 	return c.db.Model(&table.CategoryTable{}).
-		Where("id = ?", category.ID).
-		Updates(map[string]any{
-			"label":     category.Label,
-			"parent_id": category.ParentID,
-		}).Error
+		Where("id = ?", id).
+		Updates(fields).Error
 }
 
 func (c *CategoryRepository) DeleteCategory(id string) error {

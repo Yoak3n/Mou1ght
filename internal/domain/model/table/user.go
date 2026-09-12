@@ -11,6 +11,7 @@ type UserTable struct {
 	UserName  string `gorm:"not null"`
 	Password  string `gorm:"not null;"`
 	Avatar    string
+	Bio       string
 	Email     string
 	Phone     string
 	Role      uint

@@ -3,10 +3,11 @@ package entity
 import "Mou1ght/internal/domain/model/table"
 
 type UserEntity struct {
-	ID                  string `json:"id"`
-	UserName            string `json:"username"`
-	Avatar              string `json:"avatar"`
-	Role                string `json:"role"`
+	ID       string `json:"id"`
+	UserName string `json:"username"`
+	Avatar   string `json:"avatar"`
+	Bio      string `json:"bio,omitempty"`
+	Role     string `json:"role"`
 	*OutsideInformation `json:",omitempty"`
 }
 
@@ -21,6 +22,7 @@ func NewUserEntityFromTable(user *table.UserTable, more bool) *UserEntity {
 		ID:       user.ID,
 		UserName: user.UserName,
 		Avatar:   user.Avatar,
+		Bio:      user.Bio,
 	}
 	rs := ""
 	switch user.Role {

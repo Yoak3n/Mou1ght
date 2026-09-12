@@ -14,5 +14,6 @@ type ArticleRepository interface {
 	DeleteArticleByID(id string) error
 	GetArticlesByAuthorID(authorID string, desc bool) ([]table.ArticleTable, error)
 	GetArticlesByAuthorIDs(ids []string, desc bool) ([]*table.ArticleTable, error)
+	GetArticlesByIDs(ids []string, desc bool) ([]table.ArticleTable, error)
 	GetArticles(opts request.ListOptions) ([]*table.ArticleTable, int64, error)
 }

@@ -28,7 +28,7 @@ func setupSettingRouter(r fiber.Router) {
 
 func setupAttachmentRouter(r fiber.Router, attachmentHandler *handler.AttachmentHandler) {
 	attachment := r.Group("/attachment")
-	attachment.Use(middleware.Auth).Post("/upload", attachmentHandler.UploadAttachment)
-	attachment.Use(middleware.Auth).Get("/list", attachmentHandler.GetAttachmentList)
-	attachment.Use(middleware.Auth).Delete("/delete/:id", attachmentHandler.DeleteAttachment)
+	attachment.Post("/upload", middleware.Auth, attachmentHandler.UploadAttachment)
+	attachment.Get("/list", middleware.Auth, attachmentHandler.GetAttachmentList)
+	attachment.Delete("/delete/:id", middleware.Auth, attachmentHandler.DeleteAttachment)
 }

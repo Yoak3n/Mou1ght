@@ -120,6 +120,9 @@ func (s *UserService) UpdateProfile(uid string, req *request.UpdateUserProfileRe
 	if req.Avatar != user.Avatar {
 		fields["avatar"] = req.Avatar
 	}
+	if req.Bio != user.Bio {
+		fields["bio"] = req.Bio
+	}
 	if len(fields) == 0 {
 		return entity.NewUserEntityFromTable(user, true), nil
 	}

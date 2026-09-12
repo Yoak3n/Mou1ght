@@ -40,6 +40,9 @@ func (m *mockArticleRepo) GetArticlesByAuthorID(authorID string, desc bool) ([]t
 func (m *mockArticleRepo) GetArticlesByAuthorIDs(ids []string, desc bool) ([]*table.ArticleTable, error) {
 	return nil, nil
 }
+func (m *mockArticleRepo) GetArticlesByIDs(ids []string, desc bool) ([]table.ArticleTable, error) {
+	return nil, nil
+}
 func (m *mockArticleRepo) GetArticles(opts request.ListOptions) ([]*table.ArticleTable, int64, error) {
 	return m.articles, m.articleTotal, nil
 }
@@ -270,7 +273,9 @@ func (m *mockPostRepo) UpdatePostStatus(postType string, id string, status int8)
 type mockCategoryRepo struct{}
 
 func (m *mockCategoryRepo) CreateCategory(category *table.CategoryTable) error { return nil }
-func (m *mockCategoryRepo) UpdateCategory(category *table.CategoryTable) error { return nil }
+func (m *mockCategoryRepo) UpdateCategoryFields(id string, fields map[string]any) error {
+	return nil
+}
 func (m *mockCategoryRepo) DeleteCategory(categoryID string) error             { return nil }
 func (m *mockCategoryRepo) GetAllCategories() ([]table.CategoryTable, error)   { return nil, nil }
 func (m *mockCategoryRepo) GetCategoriesByID(ids []string) ([]table.CategoryTable, error) {

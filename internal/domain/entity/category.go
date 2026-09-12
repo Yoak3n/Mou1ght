@@ -16,6 +16,6 @@ func NewCategoryInformationEntityFromTable(category *table.CategoryTable) PostSi
 
 type CategoryGroup struct {
 	PostSign
-	Parent   string           `json:"-"`
+	Parent   string           `json:"parent,omitempty"`
 	Children []*CategoryGroup `json:"children"`
 }

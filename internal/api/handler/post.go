@@ -95,6 +95,32 @@ func filterPublished(result map[string]any) {
 		}
 	}
 
+	if v, ok := result["authors"]; ok {
+		switch items := v.(type) {
+		case []*entity.UserWithPostEntity:
+			for _, u := range items {
+				if u == nil {
+					continue
+				}
+				filtered := make([]entity.ArticleEntity, 0, len(u.Articles))
+				for _, a := range u.Articles {
+					if a.State.Status == "published" {
+						filtered = append(filtered, a)
+					}
+				}
+				u.Articles = filtered
+				filteredS := make([]entity.SharingEntity, 0, len(u.Sharings))
+				for _, s := range u.Sharings {
+					if s.State.Status == "published" {
+						filteredS = append(filteredS, s)
+					}
+				}
+				u.Sharings = filteredS
+			}
+			result["authors"] = items
+		}
+	}
+
 	if v, ok := result["tags"]; ok {
 		switch items := v.(type) {
 		case []*entity.TagWithArticlesEntity:
@@ -126,19 +152,41 @@ func filterPublished(result map[string]any) {
 func (h *PostHandler) categories(cm map[string]table.CategoryTable, links []table.CategoryLinkTable, descend bool) map[string]any {
 	resultMap := make(map[string]any)
 	resultMap["categories"] = make([]*entity.CategoryWithArticlesEntity, 0)
-	// 遍历分类链接，获取每个分类下的文章
+
+	// 同一分类多篇文章会有多条 link，按分类聚合后再取文章
+	articleIDsByCat := make(map[string][]string)
+	catOrder := make([]string, 0)
 	for i := range links {
-		// 根据排序方式获取分类下的文章
-		articles, err := h.categoryService.GetArticlesFromCategoryLink(&links[i], descend)
+		catID := links[i].CategoryID
+		if _, exists := cm[catID]; !exists {
+			continue
+		}
+		if _, seen := articleIDsByCat[catID]; !seen {
+			catOrder = append(catOrder, catID)
+		}
+		articleIDsByCat[catID] = append(articleIDsByCat[catID], links[i].ArticleID)
+	}
+
+	for _, catID := range catOrder {
+		cat := cm[catID]
+		rawIDs := articleIDsByCat[catID]
+		seen := make(map[string]bool, len(rawIDs))
+		ids := make([]string, 0, len(rawIDs))
+		for _, id := range rawIDs {
+			if seen[id] {
+				continue
+			}
+			seen[id] = true
+			ids = append(ids, id)
+		}
+		articles, err := h.articleService.GetArticlesByIDs(ids, descend)
 		if err != nil {
 			continue
 		}
-		// 获取分类记录
-		categoryRecord := cm[links[i].CategoryID]
-		// 创建包含文章信息的分类实体
-		category := h.dtoService.GetCategoryWithArticlesEntityFromTable(&categoryRecord, articles)
-		// 将分类实体添加到返回结果中
-		resultMap["categories"] = append(resultMap["categories"].([]*entity.CategoryWithArticlesEntity), category)
+		resultMap["categories"] = append(
+			resultMap["categories"].([]*entity.CategoryWithArticlesEntity),
+			h.dtoService.GetCategoryWithArticlesEntityFromTable(&cat, articles),
+		)
 	}
 	return resultMap
 }
