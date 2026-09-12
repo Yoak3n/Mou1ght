@@ -2,11 +2,14 @@ FROM node:20-alpine AS admin-builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-WORKDIR /app/admin
+# 与宿主机保持一致的前端路径，保证 vite outDir(../../internal/...) 落在 /app/internal/...，供后端 COPY
+WORKDIR /app/frontend/admin
 
 COPY frontend/admin/package.json frontend/admin/pnpm-lock.yaml ./
 
 RUN pnpm install --frozen-lockfile
+
+RUN pnpm config set verify-deps-before-run false
 
 COPY frontend/admin/ .
 
