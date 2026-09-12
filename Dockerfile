@@ -36,7 +36,8 @@ FROM alpine AS runtime
 
 LABEL authors="Yoake"
 
-RUN apk --no-cache add ca-certificates sqlite-libs
+# tzdata：alpine 默认无时区数据库，DSN 里 TimeZone=Asia/Shanghai 时 Go 解析会 panic
+RUN apk --no-cache add ca-certificates sqlite-libs tzdata
 
 WORKDIR /app
 
