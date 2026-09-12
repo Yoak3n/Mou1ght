@@ -1,0 +1,74 @@
+# 服务器专用：纯拉镜像部署（无 build 块，服务器不需要源码）
+# 用法：docker compose -f docker-compose.deploy.yaml pull && docker compose -f docker-compose.deploy.yaml up -d
+# 注意：docker-compose v1 用 docker-compose（无空格）前缀
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - client
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["/docker-entrypoint.sh nginx -g 'daemon off;' & trap 'exit 0' TERM INT; while :; do sleep 12h; nginx -s reload 2>/dev/null || true; done; wait $$!;"]
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $$!; certbot renew --webroot -w /var/www/certbot --quiet; done;'"
+
+  backend:
+    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-backend:${IMAGE_TAG:-latest}
+    expose:
+      - "10420"
+    environment:
+      - JWT_KEY=${JWT_KEY:-}
+      - VISITOR_JWT_KEY=${VISITOR_JWT_KEY:-}
+    volumes:
+      - mou1ght-data:/app/data
+      - ./config.yaml:/app/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mou1ght}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mou1ght-pass}
+      - POSTGRES_DB=${POSTGRES_DB:-mou1ght}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mou1ght} -d ${POSTGRES_DB:-mou1ght}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  client:
+    image: ${DOCKERHUB_USERNAME:-mou1ght}/mou1ght-client:${IMAGE_TAG:-latest}
+    expose:
+      - "3000"
+    environment:
+      - BASE_URL=http://backend:10420
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET:-please-change-me}
+      - SITE_URL=${SITE_URL:-https://your-domain.com}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mou1ght-data:
+  postgres-data:
+  certbot-webroot:
