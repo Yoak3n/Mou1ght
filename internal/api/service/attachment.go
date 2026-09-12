@@ -24,12 +24,17 @@ func (s *AttachmentService) ListAll() ([]entity.AttachmentEntity, error) {
 	}
 	entities := make([]entity.AttachmentEntity, 0, len(records))
 	for i := range records {
+		used, err := s.links.CountByAttachmentID(records[i].ID)
+		if err != nil {
+			return nil, err
+		}
 		entities = append(entities, entity.AttachmentEntity{
 			ID:           records[i].ID,
 			URL:          "/upload/" + strings.TrimPrefix(records[i].StoragePath, "/"),
 			OriginalName: records[i].OriginalName,
 			Size:         records[i].Size,
 			Mime:         records[i].Mime,
+			Referenced:   used > 0,
 		})
 	}
 	return entities, nil

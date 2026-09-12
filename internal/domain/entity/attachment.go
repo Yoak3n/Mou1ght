@@ -24,6 +24,8 @@ type AttachmentEntity struct {
 	OriginalName string `json:"original_name,omitempty"`
 	Size         int64  `json:"size,omitempty"`
 	Mime         string `json:"mime,omitempty"`
+	// 是否被内容（说说）引用，前端删除前据此提醒
+	Referenced bool `json:"referenced,omitempty"`
 }
 
 func NewAttachmentEntityFromPath(p string) AttachmentEntity {

@@ -11,7 +11,9 @@ services:
       - certbot-webroot:/var/www/certbot:ro
     depends_on:
       - backend
-      - client
+      - client:
+          # 等 client 健康再启动，避免启动瞬间 DNS 竞争报 "host not found in upstream client"
+          condition: service_healthy
     # certbot 每 12h 检查续签，nginx 每 12h 重载一次让新证书生效（零停机）；
     # $$! 是 compose 对 shell $! 的转义（后台 nginx 的 PID）
     entrypoint: ["/bin/sh", "-c"]
@@ -78,6 +80,13 @@ services:
       - SITE_URL=${SITE_URL:-https://your-domain.com}
     depends_on:
       - backend
+    # client 是静态渲染的 Next.js，busybox wget 探测根路径即可
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

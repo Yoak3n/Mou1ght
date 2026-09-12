@@ -44,6 +44,8 @@ docker --version
 docker compose version
 ```
 
+> **两种写法都行，选一台机器定一种**：新版 docker 用 `docker compose`（v2，空格）；老机器装的是 `docker-compose`（v1，横杠）。命令完全对应，把本文里的 `docker compose` 换成 `docker-compose` 即可。本机先确认 `docker compose version` 是否报错——报错说明是 v1，全程用 `docker-compose` 前缀。
+
 ## 第二步：获取代码
 
 ```bash
@@ -64,6 +66,8 @@ vi config.yaml
 ```
 
 参考 `config.yaml` 中已有的注释字段进行配置。
+
+> **⚠️ PostgreSQL DSN 里的 `TimeZone=Asia/Shanghai` 依赖时区库**：镜像已内置 tzdata（alpine 默认没有，Go 解析时区会直接 panic `unknown time zone`），所以可以放心保留该参数；若后端启动报时区相关 panic，确认拉取的是最新镜像（`docker compose pull` 后再 `up -d`）。
 
 ## 第四步：配置 Nginx
 
@@ -117,13 +121,15 @@ docker compose -f docker-compose.prod.yaml up -d nginx
 **2. 签发证书（webroot 认证器会存进续签配置）：**
 
 ```bash
-docker compose -f docker-compose.prod.yaml run --rm certbot \
+docker compose -f docker-compose.prod.yaml run --rm --entrypoint certbot certbot \
   certonly --webroot \
   -w /var/www/certbot \
   -d 你的域名 \
   --email your@email.com \
   --agree-tos --no-eff-email --non-interactive
 ```
+
+> **⚠️ 必须加 `--entrypoint certbot`**：certbot 服务默认 entrypoint 是 renew 循环（`while :; do ...; certbot renew ...; done`），直接 `run certbot certonly` 会继承它、把你的 `certonly` 参数当普通字符串忽略，导致命令**无限挂起**。用 `--entrypoint certbot` 覆盖后才真正执行 certonly。首次签发失败/挂起时，检查签发成功与否看 `ls nginx/certs/live/你的域名/` 是否出现 `fullchain.pem`。
 
 **3. 恢复完整配置并启动全部服务：**
 
@@ -207,11 +213,15 @@ docker compose -f docker-compose.prod.yaml up -d --build
 # .env 里指定镜像命名空间（可加 IMAGE_TAG 固定版本）
 echo "DOCKERHUB_USERNAME=你的DockerHub用户名" >> .env
 
-docker compose -f docker-compose.prod.yaml pull
-docker compose -f docker-compose.prod.yaml up -d
+# 服务器用 docker-compose.deploy.yaml（纯镜像、无 build 块）；
+# 别用 docker-compose.prod.yaml——它带 build 块，服务器没有源码目录会报 "frontend/client does not exist"
+docker compose -f docker-compose.deploy.yaml pull
+docker compose -f docker-compose.deploy.yaml up -d
 ```
 
-更新时只需 `docker compose pull && docker compose up -d`。
+更新时只需 `docker compose -f docker-compose.deploy.yaml pull && docker compose -f docker-compose.deploy.yaml up -d`。
+
+> **提示**：`docker-compose.deploy.yaml` 与 `docker-compose.prod.yaml` 的服务定义一致（含 client 健康检查），只去掉了 build 块。改配置时记得两份保持同步。
 
 > **注意**：`frontend/` 是 git 子模块，workflow 已用 `submodules: recursive` 递归检出；子模块仓库需对 GitHub Actions 可访问（公开仓库无需额外配置，私有仓库需配置 PAT）。
 
@@ -253,11 +263,15 @@ docker compose -f docker-compose.prod.yaml up -d
 # 检查所有容器状态
 docker compose -f docker-compose.prod.yaml ps
 
-# 应该看到 4 个容器都在运行：
+# 应该看到 5 个容器都在运行（PostgreSQL 模式）：
 # - nginx
 # - certbot
 # - backend
+# - db
 # - client
+#
+# 注意：nginx 的 depends_on 已配 client 的健康检查，首次启动会等 client 就绪，
+# 不会再有 "host not found in upstream client" 的启动竞争报错。
 
 # 检查 HTTPS
 curl -I https://blog.example.com
@@ -272,6 +286,8 @@ curl https://blog.example.com/api/v1/setting/blog
 - 后端 API：`https://blog.example.com/api/v1/`
 
 ## 常用运维命令
+
+> 下面的 `-f docker-compose.prod.yaml` 按需替换：**服务器（拉镜像模式）用 `docker-compose.deploy.yaml`**；本地开发/有源码的机器用 `docker-compose.prod.yaml`（可 `--build`）。
 
 ```bash
 # 查看日志
@@ -316,6 +332,26 @@ docker run --rm -v mou1ght-data:/data -v $(pwd):/backup alpine \
 
 ## 故障排查
 
+### nginx 反复崩溃重启（cannot load certificate / host not found）
+
+**现象**：`docker compose logs nginx` 里反复出现 `[emerg] cannot load certificate "/etc/letsencrypt/live/.../fullchain.pem"` 或 `host not found in upstream "client"`，nginx 始终起不来，其余容器正常。
+
+**这是启动顺序问题，不是配置写错，分两种情况：**
+
+- **证书尚未签发**（首次部署）：nginx 的 `depends_on` 不依赖 certbot，它会在证书文件存在之前就启动，于是崩溃重启。**等证书签发成功后再拉起一次 nginx 即可**：
+  ```bash
+  docker compose -f docker-compose.prod.yaml restart nginx
+  ```
+  之后如果再次 `up -d` 全部重来，nginx 会重新等证书——所以首次部署的固定顺序是：先 80-only 配置 → 签证书 → 恢复完整配置 → `up -d`。
+
+- **DNS 竞争**（`host not found in upstream "client"`）：`up` 启动的一瞬间 client 容器名还没注册进 compose 网络。compose 已给 client 配了健康检查并让 nginx 等它，正常流程不会再遇到；若仍偶发，`restart nginx` 即恢复（`restart: unless-stopped` 也会自动重试自愈）。
+
+### 前台 `docker-compose up` 被 Ctrl+C 后所有容器 Exit 143
+
+**现象**：`docker compose ps` 看到 `Exit 143`（backend、certbot 等）。
+
+**原因**：前台 `docker compose up` 会 attach 到所有容器，一旦 Ctrl+C 或 SSH 断开，全部容器收到 SIGTERM 停止。**服务器上永远用 `-d` 后台运行**（`docker compose -f ... up -d`），日志用 `logs -f` 单独看。
+
 ### 502 Bad Gateway
 
 Nginx 无法连接后端或客户端。检查：
@@ -338,8 +374,8 @@ openssl x509 -in nginx/certs/live/你的域名/fullchain.pem -noout -dates
 # 查看自动续签是否正常（每 12h 一次）
 docker compose -f docker-compose.prod.yaml logs certbot
 
-# 强制续期（手动触发）
-docker compose -f docker-compose.prod.yaml run --rm certbot renew --force-renewal --webroot -w /var/www/certbot
+# 强制续期（手动触发；同样要 --entrypoint certbot，理由见方式 A）
+docker compose -f docker-compose.prod.yaml run --rm --entrypoint certbot certbot renew --force-renewal --webroot -w /var/www/certbot
 ```
 
 ### 客户端无法连接 API
