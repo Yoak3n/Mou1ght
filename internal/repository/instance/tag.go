@@ -217,3 +217,31 @@ func (t *TagRepository) CreateTagsLinkToArticle(tags []string, articleID string)
 	}
 	return nil
 }
+
+// CountLinksGroupByTag 统计指定目标类型下每个标签关联的已发布文章/分享数。
+// 关联的正文已软删或非发布状态的链接不计入。
+func (t *TagRepository) CountLinksGroupByTag(targetType table.TagType) (map[string]int64, error) {
+	joinTable := "article_tables"
+	if targetType == table.SharingTag {
+		joinTable = "sharing_tables"
+	}
+	type countRow struct {
+		TagID string
+		Count int64
+	}
+	rows := make([]countRow, 0)
+	err := t.db.Model(&table.TagLinkTable{}).
+		Select("tag_link_tables.tag_id AS tag_id, COUNT(*) AS count").
+		Joins("JOIN "+joinTable+" ON "+joinTable+".id = tag_link_tables.target_id AND "+joinTable+".status = 1 AND "+joinTable+".deleted_at IS NULL").
+		Where("tag_link_tables.target_type = ?", targetType).
+		Group("tag_link_tables.tag_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	counts := make(map[string]int64, len(rows))
+	for _, row := range rows {
+		counts[row.TagID] = row.Count
+	}
+	return counts, nil
+}

@@ -40,7 +40,7 @@ func runApp() {
 	// 服务
 	dtoService := service.NewDTOService(userRepository, articleRepository, tagRepository, categoryRepository, attachmentRepository, attachmentLinkRepository, postCounter)
 	userService := service.NewUserService(userRepository, articleRepository, sharingRepository)
-	articleService := service.NewArticleService(articleRepository, categoryRepository, categoryLinkRepository, tagRepository)
+	articleService := service.NewArticleService(articleRepository, categoryRepository, categoryLinkRepository, tagRepository, attachmentLinkRepository)
 	sharingService := service.NewSharingService(sharingRepository, tagRepository, attachmentRepository, attachmentLinkRepository)
 	messageService := service.NewMessageService(messageRepository)
 	tagService := service.NewTagService(tagRepository)

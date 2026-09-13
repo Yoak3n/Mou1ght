@@ -55,12 +55,15 @@ type mockTagRepo struct {
 	getTag    *table.TagTable
 	getTagErr error
 	updated   *table.TagTable
+	tags      []table.TagTable
+	counts    map[string]int64
+	countsErr error
 }
 
 func (m *mockTagRepo) CreateTag(tag *table.TagTable) error { return nil }
 func (m *mockTagRepo) DeleteTag(tagID string) error        { return nil }
 func (m *mockTagRepo) GetAllTags() ([]table.TagTable, error) {
-	return nil, nil
+	return m.tags, nil
 }
 func (m *mockTagRepo) GetTagByID(id string) (*table.TagTable, error) {
 	return m.getTag, m.getTagErr
@@ -102,6 +105,9 @@ func (m *mockTagRepo) GetSharingFromTagLink(link *table.TagLinkTable, desc bool)
 	return nil, nil
 }
 func (m *mockTagRepo) CreateTagsLinkToArticle(tags []string, articleID string) error { return nil }
+func (m *mockTagRepo) CountLinksGroupByTag(targetType table.TagType) (map[string]int64, error) {
+	return m.counts, m.countsErr
+}
 
 type mockCategoryLinkRepo struct {
 	deleteByArticleCalls []string
@@ -221,6 +227,13 @@ func (m *mockAttachmentLinkRepo) DeleteBySharingID(sharingID string) error { ret
 func (m *mockAttachmentLinkRepo) GetAttachmentIDsBySharingID(sharingID string) ([]string, error) {
 	return nil, nil
 }
+func (m *mockAttachmentLinkRepo) ReplaceArticleAttachments(articleID string, attachmentIDs []string) error {
+	return nil
+}
+func (m *mockAttachmentLinkRepo) DeleteByArticleID(articleID string) error { return nil }
+func (m *mockAttachmentLinkRepo) GetAttachmentIDsByArticleID(articleID string) ([]string, error) {
+	return nil, nil
+}
 func (m *mockAttachmentLinkRepo) CountByAttachmentID(attachmentID string) (int64, error) {
 	return m.refCount, nil
 }
@@ -270,7 +283,10 @@ func (m *mockPostRepo) UpdatePostStatus(postType string, id string, status int8)
 	return m.err
 }
 
-type mockCategoryRepo struct{}
+type mockCategoryRepo struct {
+	counts    map[string]int64
+	countsErr error
+}
 
 func (m *mockCategoryRepo) CreateCategory(category *table.CategoryTable) error { return nil }
 func (m *mockCategoryRepo) UpdateCategoryFields(id string, fields map[string]any) error {
@@ -280,6 +296,9 @@ func (m *mockCategoryRepo) DeleteCategory(categoryID string) error             {
 func (m *mockCategoryRepo) GetAllCategories() ([]table.CategoryTable, error)   { return nil, nil }
 func (m *mockCategoryRepo) GetCategoriesByID(ids []string) ([]table.CategoryTable, error) {
 	return nil, nil
+}
+func (m *mockCategoryRepo) CountArticlesGroupByCategory() (map[string]int64, error) {
+	return m.counts, m.countsErr
 }
 func (m *mockCategoryRepo) QueryCategoriesByArticleID(articleID string) ([]table.CategoryTable, error) {
 	return nil, nil

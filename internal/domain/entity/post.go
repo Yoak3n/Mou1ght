@@ -15,6 +15,8 @@ type PostTimeInfo struct {
 type PostSign struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
+	// Count 为该标签/分类直接关联的已发布文章数，仅在标签/分类列表接口中填充
+	Count int64 `json:"count,omitempty"`
 }
 
 func StatusIntToString(status int8) string {

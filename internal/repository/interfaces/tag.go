@@ -20,5 +20,6 @@ type TagRepository interface {
 	GetTagLinkByKeyword(keyword []string, typ string) (map[string]table.TagTable, []table.TagLinkTable, error)
 	GetArticlesFromTagLink(link *table.TagLinkTable, desc bool) ([]table.ArticleTable, error)
 	GetSharingFromTagLink(link *table.TagLinkTable, desc bool) ([]table.SharingTable, error)
+	CountLinksGroupByTag(targetType table.TagType) (map[string]int64, error)
 	CreateTagsLinkToArticle(tags []string, articleID string) error
 }

@@ -19,8 +19,10 @@ type AttachmentTable struct {
 }
 
 type AttachmentLinkTable struct {
-	ID           string `gorm:"primary_key;not null;"`
+	ID string `gorm:"primary_key;not null;"`
+	// SharingID 与 ArticleID 二选一：说说链接填 SharingID，文章链接填 ArticleID，另一侧留空
 	SharingID    string `gorm:"not null;index"`
+	ArticleID    string `gorm:"not null;index"`
 	AttachmentID string `gorm:"not null;index"`
 	Sort         int    `gorm:"not null;default:0"`
 	CreatedAt    time.Time

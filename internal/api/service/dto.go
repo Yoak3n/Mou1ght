@@ -30,6 +30,28 @@ func missingUserEntity(id string) entity.UserEntity {
 	}
 }
 
+// attachmentEntitiesByIDs 按给定顺序组装附件实体；查询出错时返回空切片
+func (s *DTOService) attachmentEntitiesByIDs(ids []string) []entity.AttachmentEntity {
+	entities := make([]entity.AttachmentEntity, 0)
+	if len(ids) == 0 {
+		return entities
+	}
+	records, err := s.attachments.GetAttachmentsByIDs(ids)
+	if err != nil {
+		return entities
+	}
+	recordsMap := make(map[string]table.AttachmentTable, len(records))
+	for _, r := range records {
+		recordsMap[r.ID] = r
+	}
+	for _, id := range ids {
+		if r, ok := recordsMap[id]; ok {
+			entities = append(entities, attachmentEntityFromTable(&r))
+		}
+	}
+	return entities
+}
+
 func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, detail bool) *entity.ArticleEntity {
 	if article == nil {
 		return nil
@@ -73,6 +95,12 @@ func (s *DTOService) GetArticleEntityFromTable(article *table.ArticleTable, deta
 	if err == nil {
 		e.Categories = s.GetCategoriesInformationEntityFromTable(categories)
 	}
+	if detail && s.sal != nil {
+		ids, err := s.sal.GetAttachmentIDsByArticleID(article.ID)
+		if err == nil {
+			e.Attachments = s.attachmentEntitiesByIDs(ids)
+		}
+	}
 	return e
 }
 
@@ -114,6 +142,11 @@ func (s *DTOService) GetCategoryInformationEntityFromTable(items []table.Categor
 }
 
 func (s *DTOService) GetCategoryGroupFromTables(items []table.CategoryTable) []*entity.CategoryGroup {
+	// 统计失败时计数留空，不阻塞分类树返回
+	counts, err := s.cr.CountArticlesGroupByCategory()
+	if err != nil {
+		counts = map[string]int64{}
+	}
 	nodeMap := make(map[string]*entity.CategoryGroup)
 	for _, item := range items {
 		node := &entity.CategoryGroup{
@@ -121,6 +154,7 @@ func (s *DTOService) GetCategoryGroupFromTables(items []table.CategoryTable) []*
 			Parent:   item.ParentID,
 			Children: make([]*entity.CategoryGroup, 0),
 		}
+		node.Count = counts[item.ID]
 		nodeMap[item.ID] = node
 	}
 	var rootNodes = make([]*entity.CategoryGroup, 0)
@@ -133,6 +167,19 @@ func (s *DTOService) GetCategoryGroupFromTables(items []table.CategoryTable) []*
 		} else {
 			rootNodes = append(rootNodes, node)
 		}
+	}
+	// TotalCount 自底向上聚合子分类的文章数
+	var fillTotal func(n *entity.CategoryGroup) int64
+	fillTotal = func(n *entity.CategoryGroup) int64 {
+		total := n.Count
+		for _, child := range n.Children {
+			total += fillTotal(child)
+		}
+		n.TotalCount = total
+		return total
+	}
+	for _, root := range rootNodes {
+		fillTotal(root)
 	}
 	return rootNodes
 }
@@ -178,21 +225,10 @@ func (s *DTOService) GetSharingEntityFromTable(sharing *table.SharingTable) *ent
 	user, err := s.ur.GetUser(sharing.AuthorID)
 	viewDelta, likeDelta := s.counter.GetCounterDelta("sharing", sharing.ID)
 	length := util.MeasureArticleLength(sharing.Content)
-	attachments := make([]entity.AttachmentEntity, 0)
+	var attachments []entity.AttachmentEntity
 	ids, err := s.sal.GetAttachmentIDsBySharingID(sharing.ID)
-	if err == nil && len(ids) > 0 {
-		records, e := s.attachments.GetAttachmentsByIDs(ids)
-		if e == nil {
-			rm := make(map[string]table.AttachmentTable, len(records))
-			for _, r := range records {
-				rm[r.ID] = r
-			}
-			for _, id := range ids {
-				if r, ok := rm[id]; ok {
-					attachments = append(attachments, attachmentEntityFromTable(&r))
-				}
-			}
-		}
+	if err == nil {
+		attachments = s.attachmentEntitiesByIDs(ids)
 	}
 	e := &entity.SharingEntity{
 		ID:      sharing.ID,

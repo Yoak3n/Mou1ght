@@ -9,6 +9,7 @@ type CategoryRepository interface {
 	GetAllCategories() ([]table.CategoryTable, error)
 	GetCategoriesByID(ids []string) ([]table.CategoryTable, error)
 	QueryCategoriesByArticleID(articleID string) ([]table.CategoryTable, error)
+	CountArticlesGroupByCategory() (map[string]int64, error)
 }
 
 type CategoryLinkRepository interface {

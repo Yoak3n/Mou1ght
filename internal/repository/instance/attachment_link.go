@@ -47,6 +47,39 @@ func (r *AttachmentLinkRepository) GetAttachmentIDsBySharingID(sharingID string)
 	return ids, err
 }
 
+// ReplaceArticleAttachments 整体替换文章的附件链接（顺序即 Sort）
+func (r *AttachmentLinkRepository) ReplaceArticleAttachments(articleID string, attachmentIDs []string) error {
+	err := r.DeleteByArticleID(articleID)
+	if err != nil {
+		return err
+	}
+	if len(attachmentIDs) == 0 {
+		return nil
+	}
+	for i, id := range attachmentIDs {
+		link := &table.AttachmentLinkTable{
+			ID:           util.GenAttachmentLinkID(),
+			ArticleID:    articleID,
+			AttachmentID: id,
+			Sort:         i,
+		}
+		if e := r.db.Create(link).Error; e != nil {
+			err = e
+		}
+	}
+	return err
+}
+
+func (r *AttachmentLinkRepository) DeleteByArticleID(articleID string) error {
+	return r.db.Where("article_id = ?", articleID).Delete(&table.AttachmentLinkTable{}).Error
+}
+
+func (r *AttachmentLinkRepository) GetAttachmentIDsByArticleID(articleID string) ([]string, error) {
+	ids := make([]string, 0)
+	err := r.db.Where("article_id = ?", articleID).Order("sort ASC").Model(&table.AttachmentLinkTable{}).Pluck("attachment_id", &ids).Error
+	return ids, err
+}
+
 func (r *AttachmentLinkRepository) CountByAttachmentID(attachmentID string) (int64, error) {
 	var count int64
 	err := r.db.Model(&table.AttachmentLinkTable{}).Where("attachment_id = ?", attachmentID).Count(&count).Error

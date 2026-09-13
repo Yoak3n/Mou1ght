@@ -9,15 +9,16 @@ import (
 )
 
 type ArticleService struct {
-	articles      interfaces.ArticleRepository
-	users         interfaces.UserRepository
-	categories    interfaces.CategoryRepository
-	categoryLinks interfaces.CategoryLinkRepository
-	tags          interfaces.TagRepository
+	articles           interfaces.ArticleRepository
+	users              interfaces.UserRepository
+	categories         interfaces.CategoryRepository
+	categoryLinks      interfaces.CategoryLinkRepository
+	tags               interfaces.TagRepository
+	articleAttachments interfaces.SharingAttachmentLinkRepository
 }
 
-func NewArticleService(articles interfaces.ArticleRepository, categories interfaces.CategoryRepository, categoryLinks interfaces.CategoryLinkRepository, tags interfaces.TagRepository) *ArticleService {
-	return &ArticleService{articles: articles, categories: categories, categoryLinks: categoryLinks, tags: tags}
+func NewArticleService(articles interfaces.ArticleRepository, categories interfaces.CategoryRepository, categoryLinks interfaces.CategoryLinkRepository, tags interfaces.TagRepository, articleAttachments interfaces.SharingAttachmentLinkRepository) *ArticleService {
+	return &ArticleService{articles: articles, categories: categories, categoryLinks: categoryLinks, tags: tags, articleAttachments: articleAttachments}
 }
 
 func (s *ArticleService) CreateArticle(req *request.CreateArticleRequest) error {
@@ -49,6 +50,11 @@ func (s *ArticleService) CreateArticle(req *request.CreateArticleRequest) error 
 	err = s.categoryLinks.CreateCategoriesLinkToArticle(categoryIDs, aid)
 	if err != nil {
 		return err
+	}
+	if len(req.AttachmentIDs) > 0 && s.articleAttachments != nil {
+		if err := s.articleAttachments.ReplaceArticleAttachments(aid, req.AttachmentIDs); err != nil {
+			return err
+		}
 	}
 	notify.RevalidateClient()
 	return nil
@@ -83,6 +89,12 @@ func (s *ArticleService) UpdateArticle(req *request.UpdateArticleRequest) error 
 	if err != nil {
 		return err
 	}
+	// 仅当请求显式携带 attachment_ids（非 nil）才改动附件关联，兼容不传该字段的旧客户端
+	if req.AttachmentIDs != nil && s.articleAttachments != nil {
+		if err := s.articleAttachments.ReplaceArticleAttachments(req.ID, req.AttachmentIDs); err != nil {
+			return err
+		}
+	}
 
 	notify.RevalidateClient()
 	return nil
@@ -113,6 +125,11 @@ func (s *ArticleService) DeleteArticleByID(id string) error {
 	}
 	if err := s.categoryLinks.DeleteCategoryLinkByArticleID(id); err != nil {
 		return err
+	}
+	if s.articleAttachments != nil {
+		if err := s.articleAttachments.DeleteByArticleID(id); err != nil {
+			return err
+		}
 	}
 	notify.RevalidateClient()
 	return nil

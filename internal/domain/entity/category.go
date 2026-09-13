@@ -18,4 +18,6 @@ type CategoryGroup struct {
 	PostSign
 	Parent   string           `json:"parent,omitempty"`
 	Children []*CategoryGroup `json:"children"`
+	// TotalCount 在 Count（直接关联）基础上额外聚合所有子分类的文章数
+	TotalCount int64 `json:"total_count,omitempty"`
 }

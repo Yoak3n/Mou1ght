@@ -12,7 +12,7 @@ func TestArticleService_DeleteArticleByID_Cascade(t *testing.T) {
 	tags := &mockTagRepo{}
 	categoryLinks := &mockCategoryLinkRepo{}
 
-	svc := NewArticleService(articles, &mockCategoryRepo{}, categoryLinks, tags)
+	svc := NewArticleService(articles, &mockCategoryRepo{}, categoryLinks, tags, nil)
 	if err := svc.DeleteArticleByID("a1"); err != nil {
 		t.Fatalf("DeleteArticleByID returned error: %v", err)
 	}
@@ -34,7 +34,7 @@ func TestArticleService_DeleteArticleByID_Cascade(t *testing.T) {
 func TestArticleService_DeleteArticleByID_PropagatesError(t *testing.T) {
 	want := errors.New("db down")
 	articles := &mockArticleRepo{deleteErr: want}
-	svc := NewArticleService(articles, &mockCategoryRepo{}, &mockCategoryLinkRepo{}, &mockTagRepo{})
+	svc := NewArticleService(articles, &mockCategoryRepo{}, &mockCategoryLinkRepo{}, &mockTagRepo{}, nil)
 	if err := svc.DeleteArticleByID("a1"); !errors.Is(err, want) {
 		t.Fatalf("expected %v, got %v", want, err)
 	}

@@ -73,7 +73,14 @@ func (t *TagService) TagsList() []entity.PostSign {
 	if err != nil {
 		return nil
 	}
-	return entity.NewTagsInformationEntityFromTable(records)
+	signs := entity.NewTagsInformationEntityFromTable(records)
+	// 统计失败时计数留空，不阻塞列表返回
+	if counts, err := t.tags.CountLinksGroupByTag(table.ArticleTag); err == nil {
+		for i := range signs {
+			signs[i].Count = counts[signs[i].ID]
+		}
+	}
+	return signs
 }
 
 // TagListWithPost 根据请求参数获取带有文章或分享的标签列表
